@@ -334,6 +334,7 @@ body.moon-mode #sky{z-index:9}
   <div class="foot">
     <button class="btn ghost" id="btn-book">📖 Carnet du Sage</button>
     <button class="btn ghost" id="btn-sound">🔊 Son</button>
+    <button class="btn ghost" id="btn-music">🎵 Musique</button>
     <span class="chip" id="sync-chip" title="Synchronisation de la progression entre appareils" style="color:var(--muted)">☁️ Sauvegarde locale</span>
   </div>
 </section>
@@ -690,7 +691,7 @@ function logErr(e, where){
 }
 window.addEventListener('error', e => logErr(e.error || e.message));
 window.addEventListener('unhandledrejection', e => logErr(e.reason));
-const DEFAULT = () => ({ name:'', rupees:0, lueurs:0, sound:true, items:{}, regions:{}, daily:{d:'',c:0,done:false}, tot:{r:0,w:0}, unlockAll:false });
+const DEFAULT = () => ({ name:'', rupees:0, lueurs:0, sound:true, music:true, items:{}, regions:{}, daily:{d:'',c:0,done:false}, tot:{r:0,w:0}, unlockAll:false });
 let S = DEFAULT();
 function load(){ try{ const raw = localStorage.getItem(KEY); if(raw) S = Object.assign(DEFAULT(), JSON.parse(raw)); if (S.lueurs==null) S.lueurs = S.koroks||0; }catch(e){} }
 function save(){ S.updated = Date.now(); try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} cloudSave(); }
@@ -729,8 +730,8 @@ function verbMastery(v){
 let AC = null;
 function ac(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC && AC.state!=='running'){ try{ AC.resume(); }catch(e){} } return AC; }
 // iOS coupe le son dès que l'app passe en arrière-plan ou qu'un autre son l'interrompt : on relance le contexte à chaque geste et au retour sur la page.
-['touchend','pointerdown','keydown'].forEach(ev => document.addEventListener(ev, () => { if (S.sound) ac(); }, {passive:true}));
-document.addEventListener('visibilitychange', () => { if (!document.hidden && S.sound && AC) ac(); });
+['touchend','pointerdown','keydown'].forEach(ev => document.addEventListener(ev, () => { if (S.sound){ ac(); AMB.sync(); } }, {passive:true}));
+document.addEventListener('visibilitychange', () => { if (document.hidden){ AMB.stop(); } else if (S.sound && AC){ ac(); AMB.sync(); } });
 function tone(f, t0, dur, type='sine', vol=.18){
   const c = ac(); if(!c) return;
   const o = c.createOscillator(), g = c.createGain();
@@ -856,7 +857,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) rest
 const $ = s => document.querySelector(s);
 const SCREENS = ['home','game','result','book'];
 let screen = 'home';
-function show(id){ screen = id; SCREENS.forEach(s => { const el = document.getElementById(s); el.hidden = s!==id; }); window.scrollTo({top:0}); const boss = id==='game' && run && run.mode==='boss'; document.body.classList.toggle('boss-mode', boss); GLOOM = boss ? 1 : 0; setScene(id==='game' && run ? (run.mode==='boss' ? 'chateau' : run.mode==='review' ? 'sage' : run.regionId) : 'home'); if (id!=='game'){ $('#moonrise').hidden = true; $('#moontint').style.opacity = 0; } }
+function show(id){ screen = id; SCREENS.forEach(s => { const el = document.getElementById(s); el.hidden = s!==id; }); window.scrollTo({top:0}); const boss = id==='game' && run && run.mode==='boss'; document.body.classList.toggle('boss-mode', boss); GLOOM = boss ? 1 : 0; setScene(id==='game' && run ? (run.mode==='boss' ? 'chateau' : run.mode==='review' ? 'sage' : run.regionId) : 'home'); AMB.want = sceneId; AMB.sync(); if (id!=='game'){ $('#moonrise').hidden = true; $('#moontint').style.opacity = 0; } }
 function toast(msg){ const t = document.createElement('div'); t.className='toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(()=>t.remove(), 3000); }
 const HEART = '<svg viewBox="0 0 32 29"><path d="M16 28C8 21 1 15.5 1 9 1 4.5 4.5 1 9 1c3 0 5.5 1.7 7 4 1.5-2.3 4-4 7-4 4.5 0 8 3.5 8 8 0 6.5-7 12-15 19z"/></svg>';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -907,6 +908,7 @@ function renderHome(){
     map.appendChild(b);
   });
   $('#btn-sound').textContent = S.sound ? '🔊 Son' : '🔇 Son coupé';
+  $('#btn-music').textContent = S.music!==false ? '🎵 Musique' : '🎵 Musique coupée'; $('#btn-music').disabled = !S.sound;
 }
 
 /* =========================================================
@@ -1164,6 +1166,61 @@ const MUSIC = { nodes:[], timers:[],
   },
   stop(){ this.timers.forEach(clearInterval); this.timers = []; this.nodes.forEach(n => { try{ n.stop ? n.stop() : n.disconnect(); }catch(e){} }); this.nodes = []; }
 };
+/* ---------- Musiques d'ambiance par monde (synthèse, discrètes) ----------
+   Chaque thème : une nappe d'accord (oscillateurs désaccordés filtrés), une mélodie générée pas à pas sur une gamme,
+   un écho, et parfois une pulsation. root en Hz, scale en demi-tons, bpm/sub = tempo et subdivision. */
+const THEMES = {
+  home:   {root:261.6, scale:[0,2,4,7,9,12,14,16,19], bpm:70, sub:2, density:.55, inst:'triangle', dur:1.2, melVol:.045, melF:1800, pad:[0,7,12,16], padType:'sine', padVol:0.072, padF:900, delay:.32, fb:.35},
+  sage:   {root:293.7, scale:[0,2,3,5,7,9,10,12,14,15], bpm:56, sub:1, density:.5, inst:'sine', dur:2, melVol:.05, melF:2500, pad:[0,7,10,14], padType:'triangle', padVol:0.072, padF:500, delay:.45, fb:.4},
+  plaines:{root:392, scale:[0,2,4,5,7,9,11,12,14], bpm:84, sub:2, density:.6, inst:'triangle', dur:.6, melVol:.04, melF:1600, pad:[0,4,7], padType:'sine', padVol:0.06, padF:800, delay:.25, fb:.25},
+  foret:  {root:440, scale:[0,2,4,7,9,12,14], bpm:104, sub:2, density:.5, inst:'square', dur:.18, melVol:.022, melF:2200, pad:[0,7,12], padType:'sine', padVol:0.048, padF:700, delay:.2, fb:.3, chirp:.08},
+  eldin:  {root:164.8, scale:[0,1,3,5,7,8,10,12], bpm:60, sub:1, density:.35, inst:'sawtooth', dur:1.4, melVol:.03, melF:400, pad:[0,7,12], padType:'sawtooth', padVol:0.084, padF:180, delay:.3, fb:.3, pulse:{every:2, f:55, vol:.16, dur:.25}},
+  zora:   {root:349.2, scale:[0,4,7,11,12,16,19,23], bpm:120, sub:2, density:.8, mode:'arp', inst:'sine', dur:.5, melVol:.04, melF:3000, pad:[0,7,11,16], padType:'sine', padVol:0.06, padF:900, delay:.28, fb:.45},
+  gerudo: {root:293.7, scale:[0,1,4,5,7,8,11,12,13,16], bpm:76, sub:2, density:.5, inst:'sawtooth', dur:.35, melVol:.028, melF:1200, pad:[0,7], padType:'triangle', padVol:0.048, padF:600, delay:.3, fb:.2, pulse:{every:4, f:90, vol:.1, dur:.15}},
+  hebra:  {root:523.3, scale:[0,2,4,6,7,9,11,12,14,16], bpm:48, sub:1, density:.45, inst:'sine', dur:2.5, melVol:.045, melF:4000, pad:[0,7,14], padType:'sine', padVol:0.048, padF:1000, delay:.5, fb:.5},
+  ciel:   {root:329.6, scale:[0,2,4,7,9,11,12,14,16,19], bpm:66, sub:2, density:.5, mode:'arp', inst:'triangle', dur:1, melVol:.04, melF:2000, pad:[0,4,7,11,14], padType:'sine', padVol:0.084, padF:1500, delay:.35, fb:.4},
+  chateau:{root:146.8, scale:[0,2,3,5,6,7,8,11,12,14,15], bpm:64, sub:2, density:.4, inst:'sawtooth', dur:.5, melVol:.03, melF:600, pad:[0,6,12], padType:'sawtooth', padVol:0.096, padF:200, delay:.3, fb:.3, pulse:{every:2, f:49, vol:.18, dur:.3}}
+};
+const AMB = { id:null, want:'home', hold:false, nodes:[], timer:null, master:null, melOut:null, next:0, deg:0, step:0, T:null,
+  // Fait correspondre la musique au monde affiché, si le son et la musique sont activés et qu'aucune Lune de sang n'est en cours.
+  sync(){ if (this.hold || !S.sound || S.music===false){ this.stop(); return; } if (this.id===this.want && this.timer) return; this.play(this.want); },
+  play(id){ this.stop(); const T = THEMES[id]; if (!T) return; const c = ac(); if (!c) return;
+    this.id = id; this.T = T;
+    const m = c.createGain(); m.gain.setValueAtTime(0, c.currentTime); m.gain.linearRampToValueAtTime(1, c.currentTime+1.8); m.connect(c.destination); this.master = m; this.nodes.push(m);
+    // Nappe : deux oscillateurs légèrement désaccordés par note, filtre passe-bas qui respire lentement
+    const pf = c.createBiquadFilter(); pf.type = 'lowpass'; pf.frequency.value = T.padF; const pg = c.createGain(); pg.gain.value = T.padVol*1.5/(T.pad.length*2); /* padVol = niveau global de la nappe, réparti sur ses oscillateurs */ pf.connect(pg).connect(m); this.nodes.push(pg);
+    const lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.value = .07; lg.gain.value = T.padF*.35; lfo.connect(lg).connect(pf.frequency); lfo.start(); this.nodes.push(lfo);
+    T.pad.forEach(iv => [-5, 5].forEach(ct => { const o = c.createOscillator(); o.type = T.padType; o.frequency.value = T.root/2*Math.pow(2, iv/12); o.detune.value = ct; o.connect(pf); o.start(); this.nodes.push(o); }));
+    // Mélodie : filtre + écho
+    const mf = c.createBiquadFilter(); mf.type = 'lowpass'; mf.frequency.value = T.melF; mf.connect(m);
+    const d = c.createDelay(1); d.delayTime.value = T.delay; const fb = c.createGain(); fb.gain.value = T.fb; const df = c.createBiquadFilter(); df.type = 'lowpass'; df.frequency.value = 1800;
+    mf.connect(d); d.connect(df).connect(fb).connect(d); fb.connect(m); this.nodes.push(fb);
+    this.melOut = mf; this.deg = Math.floor(T.scale.length/2); this.step = 0; this.next = c.currentTime+.3;
+    this.timer = setInterval(() => { try{ this.tick(); }catch(e){ this.stop(); } }, 100);
+  },
+  tick(){ const c = AC, T = this.T; if (!c || !T) return; const beat = 60/T.bpm/T.sub;
+    if (this.next < c.currentTime-.5) this.next = c.currentTime+.1; // onglet mis en pause : on reprend sans rattraper les notes manquées
+    while (this.next < c.currentTime+.35){
+      const t = this.next, n = T.scale.length;
+      if (T.mode==='arp'){ this.deg = (this.step % 8 === 0) ? 0 : Math.min(n-1, this.deg + 1 + (Math.random()<.3 ? 1 : 0)); }
+      else { const mv = [-2,-1,-1,0,1,1,2][Math.floor(Math.random()*7)]; this.deg = Math.max(0, Math.min(n-1, this.deg+mv)); if (this.step % 16 === 0) this.deg = Math.floor(n/2); }
+      const rest = (this.step % 8 >= 6) && Math.random()<.6; // respiration en fin de phrase
+      if (!rest && Math.random()<T.density) this.note(T.root*Math.pow(2, T.scale[this.deg]/12), t, T.dur, T.inst, T.melVol);
+      if (T.pulse && this.step % T.pulse.every === 0) this.note(T.pulse.f, t, T.pulse.dur, 'sine', T.pulse.vol);
+      if (T.chirp && Math.random()<T.chirp) this.chirp(t);
+      this.step++; this.next += beat;
+    }
+  },
+  note(f, t, dur, type, vol){ const c = AC; if (!c || !this.melOut) return; const o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t+.02); g.gain.exponentialRampToValueAtTime(.0001, t+dur); o.connect(g).connect(this.melOut); o.start(t); o.stop(t+dur+.05); },
+  chirp(t){ const c = AC; if (!c || !this.melOut) return; const o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; const f0 = 1800+Math.random()*900; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0*1.5, t+.08); o.frequency.exponentialRampToValueAtTime(f0*1.1, t+.16);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.02, t+.01); g.gain.exponentialRampToValueAtTime(.0001, t+.2); o.connect(g).connect(this.melOut); o.start(t); o.stop(t+.25); },
+  stop(){ if (this.timer){ clearInterval(this.timer); this.timer = null; } this.id = null; this.T = null; this.melOut = null;
+    const nodes = this.nodes, m = this.master; this.nodes = []; this.master = null; if (!nodes.length) return;
+    try{ if (m && AC){ m.gain.cancelScheduledValues(AC.currentTime); m.gain.setValueAtTime(m.gain.value, AC.currentTime); m.gain.linearRampToValueAtTime(0, AC.currentTime+.7); } }catch(e){}
+    setTimeout(() => nodes.forEach(n => { try{ n.stop ? n.stop() : n.disconnect(); }catch(e){} try{ n.disconnect(); }catch(e){} }), 800);
+  }
+};
 function lightning(){ if (RM) return; const el = document.createElement('div'); el.className='lightning'; document.body.appendChild(el); setTimeout(()=>el.remove(), 500); setTimeout(SFX.thunder, 150+Math.random()*300); }
 const shuffle = a => a.sort(() => Math.random()-.5);
 let moon = null;
@@ -1198,6 +1255,7 @@ function startMoon(){
   const el = $('#moon');
   // Garde-fou : si aucune question n'est affichée 8 s après le lever de lune (erreur imprévue), on force la suite, puis on rend la main à la partie.
   moon.guard = setTimeout(moonRescue, 8000);
+  AMB.hold = true; AMB.stop();
   try{ moon.qs = moonPool(); }catch(e){ logErr(e, 'moonPool'); }
   if (!moon.test) track('lune-de-sang');
   el.hidden = false; GLOOM = 1; document.body.classList.add('moon-mode'); $('#moonrise').hidden = true; $('#moontint').style.opacity = 0;
@@ -1285,6 +1343,7 @@ function endMoonBody(){
 function closeMoon(){
   if (moon){ if (moon.timer) clearInterval(moon.timer); if (moon.guard) clearTimeout(moon.guard); }
   moon = null; try{ MUSIC.stop(); }catch(e){}
+  AMB.hold = false; AMB.sync();
   document.body.classList.remove('moon-mode'); const el = $('#moon'); el.hidden = true; el.innerHTML = '';
   if (!run){ renderHome(); show('home'); return; }
   GLOOM = run.mode==='boss' ? 1 : 0;
@@ -1334,11 +1393,12 @@ new MutationObserver(() => { const a2 = $('#accents2'); if (a2 && !a2.dataset.ok
 let quitArmed = false;
 $('#btn-quit').addEventListener('click', () => {
   if (!quitArmed){ quitArmed = true; $('#btn-quit').textContent = 'Abandonner ?'; setTimeout(()=>{ quitArmed=false; $('#btn-quit').textContent='← Carte'; }, 2500); return; }
-  quitArmed = false; $('#btn-quit').textContent='← Carte'; run = null; MUSIC.stop(); document.body.classList.remove('moon-mode'); $('#moon').hidden = true; renderHome(); show('home');
+  quitArmed = false; $('#btn-quit').textContent='← Carte'; run = null; MUSIC.stop(); AMB.hold = false; document.body.classList.remove('moon-mode'); $('#moon').hidden = true; renderHome(); show('home');
 });
 $('#btn-review').addEventListener('click', () => { SFX.click(); startRun('review'); });
 $('#btn-book').addEventListener('click', () => { SFX.click(); renderBook(); show('book'); });
-$('#btn-sound').addEventListener('click', () => { S.sound = !S.sound; save(); renderHome(); if (S.sound) SFX.ok(); });
+$('#btn-sound').addEventListener('click', () => { S.sound = !S.sound; save(); renderHome(); if (S.sound) SFX.ok(); AMB.sync(); });
+$('#btn-music').addEventListener('click', () => { S.music = S.music===false; save(); renderHome(); SFX.click(); AMB.sync(); toast(S.music ? '🎵 Musique d\'ambiance activée' : '🎵 Musique coupée (les effets sonores restent)'); });
 $('#b-home').addEventListener('click', () => { renderHome(); show('home'); });
 $('#r-home').addEventListener('click', () => { run=null; renderHome(); show('home'); });
 $('#r-again').addEventListener('click', () => { const m = run.mode, r = run.regionId; startRun(m, r); });
