@@ -699,6 +699,9 @@ const today = () => new Date().toISOString().slice(0,10);
 function itemKey(v,p){ return VERBS[v].v+'|'+p; }
 function item(v,p){ const k = itemKey(v,p); return S.items[k] || (S.items[k] = {w:0,r:0,s:0,t:0}); }
 function isWeak(it){ return it.w>0 && it.s<2; }
+const REVIEW_N = 15;
+// Erreurs passées pas encore solides (moins de 4 réussites d'affilée) : la révision les consolide quand il n'y a plus d'erreur en attente.
+function consolidateList(){ return Object.entries(S.items).filter(([k,it]) => it.w>0 && it.s<4 && BY_VERB[k.split('|')[0]]).map(([k,it]) => { const [v,p] = k.split('|'); return {v:BY_VERB[v].id, p:+p, it}; }); }
 function weakList(){ return Object.entries(S.items).filter(([k,it]) => isWeak(it) && BY_VERB[k.split('|')[0]]).map(([k,it]) => { const [v,p] = k.split('|'); return {v:BY_VERB[v].id, p:+p, it}; }); }
 
 // Calibré pour qu'une trentaine de sanctuaires (ou 5 châteaux) mènent au rang Légende.
@@ -877,8 +880,9 @@ function renderHome(){
   $('#h-levelbar').style.width = next ? ((S.rupees-cur[0])/(next[0]-cur[0])*100)+'%' : '100%';
   const weak = weakList();
   $('#chip-review').textContent = weak.length + ' à revoir';
-  $('#sage-text').textContent = weak.length ? (weak.length===1 ? "Une conjugaison te résiste encore. Le Sage t'attend pour la vaincre." : `${weak.length} conjugaisons te résistent. Le Sage t'attend pour les vaincre une par une.`) : "Aucune erreur à revoir. Le Sage te regarde avec fierté : va explorer un sanctuaire !";
-  $('#btn-review').disabled = weak.length===0;
+  const cons = consolidateList().length;
+  $('#sage-text').textContent = weak.length ? (weak.length===1 ? "Une conjugaison te résiste encore. Le Sage t'attend pour la vaincre, avec 14 autres points à consolider. Une lueur si c'est sans faute !" : `${weak.length} conjugaisons te résistent. Le Sage t'attend pour les vaincre, avec les autres points à consolider : 15 épreuves, et une lueur si c'est sans faute.`) : cons ? "Aucune erreur en attente, mais le Sage connaît tes anciens points faibles : 15 épreuves pour les consolider, et une lueur si c'est sans faute." : "Aucune erreur à revoir. Le Sage te regarde avec fierté : va explorer un sanctuaire !";
+  $('#btn-review').disabled = weak.length===0 && cons===0;
   if (S.daily.d!==today()) { S.daily = {d:today(),c:0,done:false}; save(); }
   $('#daily-bar').style.width = Math.min(100, S.daily.c/20*100)+'%';
   $('#daily-text').textContent = S.daily.done ? '✅ Quête du jour accomplie !' : `${S.daily.c} / 20`;
@@ -933,14 +937,14 @@ function persons(V){ return V.imp ? [2] : [0,1,2,3,4,5]; }
 
 function buildQuestions(mode, regionId){
   if (mode==='review'){
-    const weak = weakList();
-    const first = sample(weak.map(x => ({v:x.v,p:x.p})), 10, q => 1 + S.items[itemKey(q.v,q.p)].w*2);
-    const qs = first.map(q => mkQ(q.v,q.p));
-    if (qs.length<10){
-      const sib = []; const seen = new Set(qs.map(q => itemKey(q.v,q.p)));
-      for (const q of qs) for (const p of persons(VERBS[q.v])) if(!seen.has(itemKey(q.v,p))){ seen.add(itemKey(q.v,p)); sib.push({v:q.v,p}); }
-      for (const q of sample(sib, 10-qs.length, q => weightOf(q.v,q.p))) qs.push(mkQ(q.v,q.p));
-    }
+    // 15 conjugaisons où il faut s'améliorer, par paliers : erreurs en attente, puis les autres personnes des mêmes verbes,
+    // puis les anciennes erreurs pas encore solides, puis les verbes pièges pas encore maîtrisés.
+    const qs = [], seen = new Set();
+    const take = (cands, n, wfn) => { const uniq = new Map(); cands.forEach(q => { const k = itemKey(q.v,q.p); if (!seen.has(k) && !uniq.has(k)) uniq.set(k,q); }); for (const q of sample([...uniq.values()], n, wfn)){ seen.add(itemKey(q.v,q.p)); qs.push(mkQ(q.v,q.p)); } };
+    take(weakList().map(x => ({v:x.v,p:x.p})), REVIEW_N, q => 1 + S.items[itemKey(q.v,q.p)].w*2);
+    if (qs.length<REVIEW_N){ const sib = []; for (const q of qs.slice()) for (const p of persons(VERBS[q.v])) if (!seen.has(itemKey(q.v,p))) sib.push({v:q.v,p}); take(sib, REVIEW_N-qs.length, q => weightOf(q.v,q.p)); }
+    if (qs.length<REVIEW_N){ take(consolidateList(), REVIEW_N-qs.length, q => { const it = S.items[itemKey(q.v,q.p)]; return (1+it.w)/(1+it.s); }); }
+    if (qs.length<REVIEW_N){ const hard = []; VERBS.filter(V => V.hard && verbMastery(V)<3).forEach(V => persons(V).forEach(p => hard.push({v:V.id,p}))); take(hard, REVIEW_N-qs.length, q => weightOf(q.v,q.p)); }
     return qs.sort(() => Math.random()-.5);
   }
   const R = REGIONS.find(r => r.id===regionId);
@@ -1130,7 +1134,7 @@ function endRun(){
   const orb = $('#r-orb');
   if (dead){ orb.textContent='💀'; $('#r-title').textContent = run.mode==='boss' ? 'Ganondorf a gagné… cette fois.' : 'Tu es tombé au combat'; $('#r-sub').textContent='Tu gardes tes rubis. Repose-toi, révise, et reviens plus fort.'; SFX.ko(); }
   else if (run.mode==='boss'){ orb.innerHTML='<svg viewBox="0 0 64 56" aria-hidden="true"><path d="M32 2 L47 28 L17 28 Z M17 29 L32 55 L2 55 Z M47 29 L62 55 L32 55 Z" fill="#e8c45e"/></svg>'; $('#r-title').textContent='Hyrule est sauvée !'; $('#r-sub').textContent=`Ganondorf est vaincu. ${run.correct} / ${n} bonnes réponses. La Triforce brille à nouveau.`; SFX.shrine(); burst(innerWidth/2, 200, '232,196,94', 90); setTimeout(()=>burst(innerWidth/2-120, 260, '93,227,192', 50), 500); setTimeout(()=>burst(innerWidth/2+120, 260, '255,92,124', 50), 900); }
-  else if (run.mode==='review'){ orb.textContent='✦'; $('#r-title').textContent='Révision terminée'; $('#r-sub').textContent = errs ? 'Le Sage note tes progrès. Encore un effort !' : 'Le Sage est impressionné : sans faute !'; SFX.shrine(); }
+  else if (run.mode==='review'){ orb.textContent='✦'; $('#r-title').textContent='Révision terminée'; $('#r-sub').textContent = errs ? 'Le Sage note tes progrès. Encore un effort !' : 'Le Sage est impressionné : sans faute ! Il t\'offre une lueur bienfaisante.'; SFX.shrine(); }
   else { orb.textContent = stars===3?'🏆':'✦'; $('#r-title').textContent = 'Sanctuaire terminé !'; $('#r-sub').textContent = `${R.name} · ${run.correct} / ${n} bonnes réponses`; SFX.shrine(); burst(innerWidth/2, 220, '93,227,192', 60); }
   $('#r-stars').innerHTML = run.mode==='review' ? '' : [1,2,3].map(k => k<=stars?'<b>★</b>':'★').join('');
   $('#r-loot').innerHTML = `<span class="chip rupee"><svg viewBox="0 0 20 32"><path d="M10 1 19 9v14l-9 8-9-8V9z" fill="currentColor"/></svg>+${run.rupees} rubis</span><span class="chip">🔥 Meilleure série : ${run.best}</span>${run.bonus?`<span class="chip rupee">🏅 Sans faute : +${run.bonus} rubis de bonus</span>`:''}${run.victory?`<span class="chip" style="color:var(--gold)">👑 Victoire : +${run.victory} rubis</span>`:''}${run.lueur?`<span class="chip lueur">✨ ${run.mode==='boss' ? (errs===0 ? 'Château terminé sans faute' : 'Château terminé') : 'Sans faute'} : +${run.lueur} lueur${run.lueur>1?'s':''} bienfaisante${run.lueur>1?'s':''} (${S.lueurs%4||4}/4)</span>`:''}${run.newHeart?`<span class="chip heart">💗 ${run.bossHeart ? 'Château sans faute : un cœur entier' : 'Nouveau cœur'} ! Tu en as ${maxHearts()}</span>`:''}`;
@@ -1140,7 +1144,7 @@ function endRun(){
     re.hidden=false;
     re.innerHTML = `<h3>À retravailler (le Sage s'en souvient)</h3><ul>${run.errors.map(e => { const V=VERBS[e.v]; const q={v:e.v,p:e.p,s:SUBJECTS[e.p][0]}; return `<li>${esc(subjectText(q))}<b>${esc(V.alts[e.p][0])}</b> <span style="color:var(--muted)">(${esc(V.v)})</span>${e.given?` <span style="color:var(--danger)">${e.moon?'🌕 ':''}tu as ${e.moon?'choisi':'écrit'} « ${esc(e.given)} »</span>`:''}</li>`; }).join('')}</ul>`;
   } else re.hidden = true;
-  $('#r-review').hidden = !weakList().length;
+  $('#r-review').hidden = !weakList().length && !consolidateList().length;
   show('result');
 }
 

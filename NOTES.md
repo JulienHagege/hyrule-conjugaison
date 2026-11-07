@@ -19,7 +19,7 @@ Ne jamais publier le source brut hors claude.ai : sans l'enveloppe, les écrans 
 - `COMP` : complément de phrase par verbe (univers Zelda), sans accord avec le sujet. `SUBJECTS` : sujets variés par personne.
 - État `S` (localStorage `hyrule-conj-v1` + db claude `data/users/<id>/save`) : rupees, lueurs, bonusHearts, items `{verbe|personne: {w,r,s,t}}`, regions `{stars,plays,best}`, daily, tot, moonRuns, bossWins, resetAt, updated.
 - Fusion synchro : le plus grand nombre de réponses jouées gagne, un resetAt plus récent l'emporte, la date sert en dernier recours.
-- Sélection des épreuves : `weightOf` (erreurs ×3, maîtrisé ×0,3, hard ×2) ; sanctuaire = 2 verbes `core` + région ; révision = items faibles ; château = 40 % erreurs récentes + 3e groupe ×2,2, Eldin ×0,5, réguliers ×0,02.
+- Sélection des épreuves : `weightOf` (erreurs ×3, maîtrisé ×0,3, hard ×2) ; sanctuaire = 2 verbes `core` + région ; révision = 15 épreuves par paliers (erreurs en attente, autres personnes des mêmes verbes, anciennes erreurs avec moins de 4 réussites d'affilée via `consolidateList`, verbes `hard` non maîtrisés), bouton actif tant qu'il reste quelque chose à consolider ; château = 40 % erreurs récentes + 3e groupe ×2,2, Eldin ×0,5, réguliers ×0,02.
 - Images : `IMG` (data URI, pixel art PixelLab 400×224, sources dans `src/img/`). Dessinées en canvas plein écran avec vignette ; particules par région (`SCENE_FX`).
 - Audio : tout synthétisé (Web Audio), `SFX.*`, `MUSIC` pour la Lune de sang.
 - Diagnostic à distance : `logErr(e, où)` journalise la dernière erreur technique dans `S.lastErr` (synchronisée avec la sauvegarde, lisible via ArtifactData sur `data/users/<id>/save`) et l'affiche dans la zone parents du Carnet avec un bouton Effacer. Les erreurs globales (`window error` / `unhandledrejection`) y passent aussi.
@@ -28,7 +28,7 @@ Ne jamais publier le source brut hors claude.ai : sans l'enveloppe, les écrans 
 ## Règles de jeu validées par Julien
 
 - Cœurs : 5 de base, +1 par 4 lueurs, +1 direct par château sans faute, max 10.
-- Lueur : une par run sans faute ; château terminé = +1 garantie.
+- Lueur : une par run sans faute (sanctuaire, révision ou château) ; château terminé = +1 garantie.
 - Rubis : 10 par épreuve (20 aux Îles, 30 à 40 au château) + combo ; bonus sans faute 30 / 100 (révision) / 300 (château) ; victoire château +200. Rangs jusqu'à Légende à 7000.
 - Lune de sang : une partie sur 1 ou 2 (jamais contre Ganondorf), se lève sur 3 épreuves, 5 QCM à 6,6 s, +30/20/10 rubis selon la vitesse, faux ou lent = un cœur perdu, sans faute +50 et fanfare. Bouton test dans le Carnet (zone parents), sans impact sur les stats.
 - Verbe maîtrisé (★) = réussi une fois sans erreur en attente ; or (★★) = 4 réussites à 90 %.
