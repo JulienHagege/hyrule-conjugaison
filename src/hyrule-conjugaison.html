@@ -676,6 +676,8 @@ function subjectText(q, form){
    ÉTAT, SAUVEGARDE
    ========================================================= */
 const KEY = 'hyrule-conj-v1';
+// Statistiques d'usage (GoatCounter), uniquement sur la version publique GitHub Pages : le script n'existe pas dans l'artifact, donc no-op ici.
+function track(name){ try{ if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({path:name, title:name, event:true}); }catch(e){} }
 const DEFAULT = () => ({ name:'', rupees:0, lueurs:0, sound:true, items:{}, regions:{}, daily:{d:'',c:0,done:false}, tot:{r:0,w:0}, unlockAll:false });
 let S = DEFAULT();
 function load(){ try{ const raw = localStorage.getItem(KEY); if(raw) S = Object.assign(DEFAULT(), JSON.parse(raw)); if (S.lueurs==null) S.lueurs = S.koroks||0; }catch(e){} }
@@ -960,6 +962,7 @@ function startRun(mode, regionId){
   run = {mode, regionId, qs, i:0, hearts:maxHearts(), rupees:0, combo:0, best:0, res:[], errors:[], rewind:0, phase:'ask', correct:0, bossHp:qs.length, moonAt:-1, moonDone:false};
   if (mode!=='boss' && qs.length>=5) scheduleMoon();
   show('game'); renderGame(); renderQuestion();
+  track('partie-'+(mode==='region' ? regionId : mode));
   if (mode==='boss') showPhase(1);
 }
 
@@ -1104,6 +1107,7 @@ function endRun(){
   // Château sans faute : un cœur entier, directement, en plus des lueurs.
   run.bossHeart = false;
   if (run.mode==='boss' && !dead && errs===0){ const before = maxHearts(); S.bonusHearts = (S.bonusHearts||0)+1; if (maxHearts()>before){ run.bossHeart = true; run.newHeart = true; } }
+  track(dead ? 'partie-perdue' : run.mode==='boss' ? 'chateau-vaincu' : run.mode==='review' ? 'revision-terminee' : 'sanctuaire-termine'); if (!dead && errs===0) track('sans-faute');
   run.victory = 0;
   if (run.mode==='boss' && !dead){ run.victory = 200; S.rupees += 200; run.rupees += 200; S.bossWins = (S.bossWins||0)+1; }
   save();
@@ -1171,6 +1175,7 @@ function distractors(V,p){
 function startMoon(){
   run.phase = 'moon';
   moon = {qs: moonPool(), i:0, rupees:0, lost:0, errors:0, t0:0, timer:null, test: run.mode==='test'};
+  if (!moon.test) track('lune-de-sang');
   const el = $('#moon'); el.hidden = false; GLOOM = 1; document.body.classList.add('moon-mode'); $('#moonrise').hidden = true; $('#moontint').style.opacity = 0; paintSky();
   el.innerHTML = `<div class="moon-intro"><div class="moon-orb"></div><div class="moon-title">La Lune de sang se lève…</div><div class="moon-sub">Les monstres reviennent à la vie ! Clique vite sur la bonne réponse : plus tu es rapide, plus tu gagnes de rubis. Trop lent ou faux, tu perds un cœur.</div></div>`;
   SFX.moon(); window.scrollTo({top:0});
@@ -1291,7 +1296,7 @@ $('#b-rename').addEventListener('click', () => { $('#inp-name').value = S.name; 
 $('#b-reset').addEventListener('click', () => $('#b-confirm').classList.add('on'));
 $('#b-reset-no').addEventListener('click', () => $('#b-confirm').classList.remove('on'));
 $('#b-reset-yes').addEventListener('click', () => { const name = S.name; S = DEFAULT(); S.name = name; S.resetAt = Date.now(); save(); $('#b-confirm').classList.remove('on'); renderBook(); toast('Progression effacée. Une nouvelle aventure commence.'); });
-$('#btn-name').addEventListener('click', () => { const n = $('#inp-name').value.trim(); S.name = n || 'Link'; save(); $('#modal-name').hidden = true; renderHome(); SFX.heart(); });
+$('#btn-name').addEventListener('click', () => { const n = $('#inp-name').value.trim(); S.name = n || 'Link'; save(); track('nouveau-heros'); $('#modal-name').hidden = true; renderHome(); SFX.heart(); });
 $('#inp-name').addEventListener('keydown', e => { if (e.key==='Enter') $('#btn-name').click(); });
 document.addEventListener('keydown', e => { if (e.key==='Enter' && run && run.phase==='fb' && screen==='game'){ const b = $('#btn-next'); if (b && document.activeElement!==b) { e.preventDefault(); next(); } } });
 
