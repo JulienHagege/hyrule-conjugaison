@@ -709,7 +709,10 @@ function verbMastery(v){
    SON (synthèse Web Audio)
    ========================================================= */
 let AC = null;
-function ac(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC && AC.state==='suspended') AC.resume(); return AC; }
+function ac(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC && AC.state!=='running'){ try{ AC.resume(); }catch(e){} } return AC; }
+// iOS coupe le son dès que l'app passe en arrière-plan ou qu'un autre son l'interrompt : on relance le contexte à chaque geste et au retour sur la page.
+['touchend','pointerdown','keydown'].forEach(ev => document.addEventListener(ev, () => { if (S.sound) ac(); }, {passive:true}));
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.sound && AC) ac(); });
 function tone(f, t0, dur, type='sine', vol=.18){
   const c = ac(); if(!c) return;
   const o = c.createOscillator(), g = c.createGain();
