@@ -248,13 +248,14 @@ body.moon-mode #sky{z-index:9}
   transform:translateY(calc(-10vh - var(--p)*62vh)) scale(calc(.7 + var(--p)*.5)); transition:transform 2.4s ease, box-shadow 2.4s ease, opacity 1.5s; opacity:.95}
 #moonrise[hidden]{display:block!important; opacity:0; transform:translateY(40px) scale(.5)}
 #moontint{position:fixed; inset:0; pointer-events:none; z-index:2; background:radial-gradient(circle at 85% 25%, rgba(255,40,40,.4), transparent 55%); opacity:0; transition:opacity 2s}
-#moon{position:fixed; inset:0; z-index:8; overflow:auto; display:grid; place-items:center; background:radial-gradient(circle at 50% 15%, #5a0a0a 0%, #1a0205 55%, #0a0103 100%);
+/* Contenu ancré en haut (pas centré) : avec le clavier iOS ouvert, un centrage vertical sur un écran fixé envoie le panneau hors de la zone visible. */
+#moon{position:fixed; inset:0; z-index:8; overflow:auto; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; background:radial-gradient(circle at 50% 15%, #5a0a0a 0%, #1a0205 55%, #0a0103 100%);
   padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px)); padding-block:max(16px, env(safe-area-inset-top,0px)) max(16px, env(safe-area-inset-bottom,0px))}
 #moon::before{content:""; position:fixed; inset:0; pointer-events:none; box-shadow:inset 0 0 160px 60px rgba(140,0,0,.75); animation:vignette 1.1s ease-in-out infinite alternate}
 @keyframes vignette{from{box-shadow:inset 0 0 120px 40px rgba(140,0,0,.55)} to{box-shadow:inset 0 0 220px 90px rgba(200,0,0,.85)}}
 .lightning{position:fixed; inset:0; z-index:10; pointer-events:none; background:rgba(255,235,235,.85); animation:lightning .5s ease-out forwards}
 @keyframes lightning{0%{opacity:0} 8%{opacity:1} 20%{opacity:.2} 30%{opacity:.9} 100%{opacity:0}}
-.moon-intro{text-align:center; display:flex; flex-direction:column; align-items:center; gap:16px; animation:shake .6s 2.1s}
+.moon-intro{text-align:center; display:flex; flex-direction:column; align-items:center; gap:16px; margin-top:min(14vh,110px); animation:shake .6s 2.1s}
 .moon-orb{position:relative; width:150px; height:150px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #ff9a80, #c41c1c 55%, #5a0000); box-shadow:0 0 60px #ff2a2a, 0 0 160px rgba(255,42,42,.6); animation:moonrise 2.2s ease both, moonpulse 1.1s ease-in-out 2.2s infinite alternate}
 .moon-orb::after{content:""; position:absolute; inset:-70px; border-radius:50%; background:conic-gradient(from 0deg, transparent 0 8%, rgba(255,60,60,.35) 14%, transparent 22% 33%, rgba(255,60,60,.3) 40%, transparent 48% 58%, rgba(255,60,60,.35) 66%, transparent 74% 84%, rgba(255,60,60,.3) 90%, transparent 96%); animation:spin 9s linear infinite; z-index:-1}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -262,7 +263,7 @@ body.moon-mode #sky{z-index:9}
 @keyframes moonrise{from{transform:translateY(50vh) scale(.4); opacity:0} to{transform:none; opacity:1}}
 .moon-title{font-family:var(--font-display); color:#ffb3a3; font-size:clamp(26px,6vw,44px); font-weight:800; text-shadow:0 0 30px #ff2a2a; animation:enter 1s .9s both}
 .moon-sub{color:#ffd9d0; font-weight:700; animation:enter 1s 1.4s both; max-width:40ch}
-.moon-panel{width:min(640px,100%); background:rgba(30,4,8,.9); border:1px solid rgba(255,90,60,.5); border-radius:22px; padding:18px 18px 20px; box-shadow:0 20px 50px rgba(0,0,0,.6); animation:enter .3s}
+.moon-panel{width:min(640px,100%); margin-top:min(6vh,40px); background:rgba(30,4,8,.9); border:1px solid rgba(255,90,60,.5); border-radius:22px; padding:18px 18px 20px; box-shadow:0 20px 50px rgba(0,0,0,.6); animation:enter .3s}
 .moon-hud{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; font-weight:900; color:#ffd9d0}
 .timer{height:10px; background:rgba(255,255,255,.1); border-radius:999px; overflow:hidden; margin:10px 0 4px}
 .timer i{display:block; height:100%; width:100%; background:linear-gradient(90deg,#ff2a2a,#ffb347); box-shadow:0 0 10px #ff2a2a}
@@ -1173,6 +1174,8 @@ function distractors(V,p){
 }
 function startMoon(){
   run.phase = 'moon';
+  // Fermer le clavier virtuel avant d'afficher l'écran de la lune (sinon iOS décale tout l'écran fixé).
+  try{ if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
   moon = {qs: moonPool(), i:0, rupees:0, lost:0, errors:0, t0:0, timer:null, test: run.mode==='test'};
   if (!moon.test) track('lune-de-sang');
   const el = $('#moon'); el.hidden = false; GLOOM = 1; document.body.classList.add('moon-mode'); $('#moonrise').hidden = true; $('#moontint').style.opacity = 0; paintSky();
@@ -1192,6 +1195,7 @@ function moonQuestion(){
     <div class="sentence"><span class="subj">${esc(cap(subjectText(q).trim()))}</span><span class="blank">&nbsp;</span><span class="rest">${esc(q.c||'')}.</span></div><div class="verbline">Verbe : <b>${esc(V.v)}</b></div>
     <div class="choices">${choices.map(c => `<button type="button" data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div><div class="moon-msg" id="moon-msg"></div></div>`;
   el.querySelectorAll('.choices button').forEach(b => b.addEventListener('click', () => moonAnswer(b.dataset.c)));
+  el.scrollTop = 0;
   moon.t0 = performance.now();
   let lastTick = 0;
   moon.timer = setInterval(() => { const r = 1-(performance.now()-moon.t0)/MOON_T; const bar = $('#moon-timer'); if (bar){ bar.style.width = Math.max(0,r*100)+'%'; bar.classList.toggle('urgent', r<.33); } if (r<.33 && performance.now()-lastTick>250){ lastTick = performance.now(); if (S.sound) tone(1200,0,.04,'square',.05); } if (r<=0) moonAnswer(null); }, 50);
