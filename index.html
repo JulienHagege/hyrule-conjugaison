@@ -1028,7 +1028,8 @@ function submitAnswer(e){
     const fl = document.createElement('span'); fl.className='float'; fl.textContent='+'+gain; $('#g-rupees').parentElement.appendChild(fl); setTimeout(()=>fl.remove(),1000);
     const msgs = ['Bravo !','Coup critique !','Parfait !','Un vrai héros !','Hyrule est fière de toi !','Excellent !','Yahaha !'];
     $('#q-blank').textContent = a;
-    $('#fb').innerHTML = `<div class="fb ok"><div class="big">${msgs[Math.floor(Math.random()*msgs.length)]}</div><div class="right">${sentenceHtml(q,a)}</div>${conjTable(V, q.p)}<div class="actions"><button class="btn teal" id="btn-next">Continuer →</button></div></div>`;
+    $('#fb').innerHTML = `<div class="fb ok"><div class="big">${msgs[Math.floor(Math.random()*msgs.length)]}</div><div class="right">${sentenceHtml(q,a)}</div><div class="actions"><button class="btn teal" id="btn-next">Continuer →</button></div>${conjTable(V, q.p)}</div>`;
+    $('#form-answer').hidden = true; $('#accents').hidden = true;
     $('#btn-next').addEventListener('click', next); $('#btn-next').focus();
     save(); renderGame();
   } else {
@@ -1053,7 +1054,7 @@ function submitAnswer(e){
     }
     $('#q-blank').innerHTML = '<span style="color:var(--danger);text-decoration:line-through">'+esc(raw.trim())+'</span>';
     run.phase = 'retype';
-    $('#form-answer').hidden = true;
+    $('#form-answer').hidden = true; $('#accents').hidden = true;
     const ri = $('#inp-retype'); ri.focus();
     save(); renderGame();
     if (run.hearts<=0){ $('#inp-retype').disabled = true; $('#btn-retype').textContent = 'Voir le résultat'; $('#btn-retype').onclick = endRun; $('#inp-retype').placeholder='Plus de cœurs…'; }
