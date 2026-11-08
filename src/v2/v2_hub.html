@@ -1,0 +1,37 @@
+<!-- HUB : tous les univers -->
+<section class="screen" id="hub" hidden>
+  <div class="hero hub-hero">
+    <svg class="triforce" viewBox="0 0 64 56" aria-hidden="true"><path d="M32 2 L47 28 L17 28 Z M17 29 L32 55 L2 55 Z M47 29 L62 55 L32 55 Z" fill="#e8c45e"/></svg>
+    <div class="tag">Hyrule Conjugaison</div>
+    <h1>La Légende des Temps</h1>
+    <p class="tsub">Quinze univers, un par temps de conjugaison. Chaque univers a sa carte d'Hyrule, ses rubis, ses lueurs et son Carnet. Choisis le tien.</p>
+    <div class="hub-line"><span class="chip"><span class="lab">Héros</span> <span id="hub-name">Link</span></span><button class="btn ghost" id="hub-sound" style="padding:7px 14px">🔊 Son</button><button class="btn ghost" id="hub-music" style="padding:7px 14px">🎵 Musique</button></div>
+  </div>
+
+  <div class="maptitle"><h2>Les univers</h2><span>Choisis un temps</span></div>
+  <div class="uni-grid" id="uni-grid"></div>
+
+  <div class="strip">
+    <div class="card">
+      <h2>🧝 Les héros</h2>
+      <p>Chaque héros a sa propre aventure. Touche un nom pour reprendre la sienne.</p>
+      <div class="prof-list" id="prof-list"></div>
+      <div class="actions"><input id="inp-newprof" type="text" maxlength="20" placeholder="Nouveau héros : son prénom" aria-label="Prénom du nouveau héros"><button class="btn ghost" id="btn-newprof">＋ Ajouter</button></div>
+    </div>
+    <div class="card">
+      <h2>💾 Sauvegarde</h2>
+      <p>Pour changer d'appareil ou de navigateur : enregistre un fichier ici, charge-le là-bas. Les progrès des deux côtés sont fusionnés, rien n'est perdu.</p>
+      <div class="actions"><button class="btn" id="btn-export">⬇️ Sauvegarder (fichier)</button><label class="btn ghost" for="inp-import">⬆️ Charger un fichier</label><input type="file" id="inp-import" accept=".json,application/json,text/plain" hidden></div>
+      <div class="actions" style="margin-top:8px"><button class="btn ghost" id="btn-code">📋 Copier un code</button><button class="btn ghost" id="btn-paste">Coller un code</button></div>
+      <div id="paste-box" hidden style="margin-top:10px"><textarea id="ta-code" rows="3" placeholder="Colle ici le code copié sur l'autre appareil"></textarea><div class="actions"><button class="btn teal" id="btn-paste-ok">Charger ce code</button></div></div>
+      <p id="save-msg" style="font-size:13px;margin:8px 0 0;font-weight:700"></p>
+    </div>
+  </div>
+
+  <div class="book" style="max-width:none">
+    <h3 style="color:var(--gold);font-size:20px;margin-top:4px">📚 Carnet des Temps</h3>
+    <div class="grid3" id="gb-stats" style="margin-bottom:10px"></div>
+    <div class="tablewrap"><table><thead><tr><th>Univers</th><th class="n">Réponses</th><th class="n">Réussite</th><th class="n">Étoiles</th><th>Rang</th><th class="n">Rubis</th></tr></thead><tbody id="gb-rows"></tbody></table></div>
+  </div>
+</section>
+
