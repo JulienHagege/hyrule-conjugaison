@@ -319,6 +319,32 @@ label.btn{cursor:pointer}
 .badge.tense{color:var(--gold); border-color:rgba(232,196,94,.4)}
 .sentence .subj:empty{display:none}
 
+/* Accueil : lisibilité sur les fonds pixel art, cartes compactes */
+.hero .tag{text-shadow:0 1px 4px rgba(0,0,0,.8)}
+.tdef{background:rgba(10,19,32,.6); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border:1px solid var(--line); border-radius:14px; padding:8px 14px; display:grid; gap:4px; max-width:min(620px,100%)}
+.tsub{color:#dfe6f0}
+.tex{margin:0; color:var(--gold); font-weight:800; font-size:15px; font-style:italic}
+.levels{width:min(480px,100%); background:rgba(10,19,32,.62); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border:1px solid var(--line); border-radius:16px; padding:10px 14px; display:grid; gap:10px}
+.levels .level{width:100%; margin:0}
+.levels .row{color:#e4eaf2; text-shadow:0 1px 2px rgba(0,0,0,.7)}
+.levels .bar{background:rgba(255,255,255,.12)}
+@media (min-width:760px){.strip{grid-template-columns:1fr 1fr; align-items:stretch}}
+.card.mini{display:flex; flex-direction:column; gap:10px; padding:12px 14px}
+.mini-head{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap}
+.card.mini h2{font-size:17px; margin:0}
+.card.mini p{margin:0; font-size:14px; line-height:1.4}
+.card.mini .chip{padding:5px 11px; font-size:13px}
+.card.mini .btn{align-self:flex-start; margin-top:auto; padding:9px 14px}
+.card.mini .bar{margin-top:auto}
+/* Carte : hauteur homogène, textes en une ligne */
+.map{align-items:stretch}
+.region{height:100%}
+.region .sub, .region .need{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%}
+.region .need{margin-top:auto}
+.region .need.soft{color:var(--muted); font-weight:700}
+/* La carte du Château porte aussi la classe .boss du bandeau de combat : on neutralise ses marges et son centrage */
+.region.boss{align-items:stretch; gap:8px; margin-bottom:0; padding:14px; border-radius:18px}
+
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
 
@@ -372,7 +398,7 @@ label.btn{cursor:pointer}
     <svg class="triforce" viewBox="0 0 64 56" aria-hidden="true"><path d="M32 2 L47 28 L17 28 Z M17 29 L32 55 L2 55 Z M47 29 L62 55 L32 55 Z" fill="#e8c45e"/></svg>
     <div class="tag">La Légende des Temps</div>
     <h1 id="h-tense">Présent</h1>
-    <p class="tsub" id="h-tense-desc"></p>
+    <div class="tdef"><p class="tsub" id="h-tense-desc"></p><p class="tex" id="h-tense-ex"></p></div>
     <div class="hud">
       <span class="chip"><span class="lab">Héros</span> <span id="h-name">Link</span></span>
       <span class="chip" id="h-crown" hidden>👑 <span id="h-wins"></span></span>
@@ -380,34 +406,32 @@ label.btn{cursor:pointer}
       <span class="chip lueur"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor" opacity=".25"/><circle cx="12" cy="12" r="6" fill="currentColor" opacity=".6"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg><span id="h-lueurs" class="tabular">0</span> <span class="lab">lueurs</span></span>
       <span class="chip heart"><svg viewBox="0 0 32 29"><path d="M16 28C8 21 1 15.5 1 9 1 4.5 4.5 1 9 1c3 0 5.5 1.7 7 4 1.5-2.3 4-4 7-4 4.5 0 8 3.5 8 8 0 6.5-7 12-15 19z"/></svg><span id="h-maxh" class="tabular">5</span> <span class="lab">cœurs</span></span>
     </div>
+    <div class="levels">
     <div class="level">
       <div class="row"><span>Rang : <b id="h-rank">Apprenti</b></span><span id="h-next"></span></div>
       <div class="bar gold"><i id="h-levelbar"></i></div>
     </div>
     <div class="level">
-      <div class="row"><span>Lueurs bienfaisantes : <b id="h-lueur-txt">0</b></span><span id="h-lueur-next"></span></div>
+      <div class="row"><span>Lueurs : <b id="h-lueur-txt">0</b></span><span id="h-lueur-next"></span></div>
       <div class="bar lueur"><i id="h-lueurbar"></i></div>
+    </div>
     </div>
   </div>
 
   <div class="strip">
-    <div class="card sage" id="sage-card">
-      <h2>✦ La révision du Sage</h2>
-      <p id="sage-text">Aucune erreur pour l'instant. Le Sage te regarde avec fierté.</p>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <button class="btn violet" id="btn-review">Réviser mes erreurs</button>
-        <span class="chip review" id="chip-review">0 à revoir</span>
-      </div>
+    <div class="card sage mini" id="sage-card">
+      <div class="mini-head"><h2>✦ Révision du Sage</h2><span class="chip review" id="chip-review">0 à revoir</span></div>
+      <p id="sage-text">Aucune erreur à revoir. Le Sage te regarde avec fierté.</p>
+      <button class="btn violet" id="btn-review">Réviser mes erreurs</button>
     </div>
-    <div class="card">
-      <h2>🗓️ Quête du jour</h2>
-      <p>20 bonnes réponses aujourd'hui : <b style="color:var(--gold)">+50 rubis</b>. Chaque sans-faute t'offre une lueur bienfaisante, et finir le Château d'Hyrule aussi.</p>
+    <div class="card mini">
+      <div class="mini-head"><h2>🗓️ Quête du jour</h2><span class="chip" id="daily-text">0 / 20</span></div>
+      <p>20 bonnes réponses aujourd'hui : <b style="color:var(--gold)">+50 rubis</b>. Un sans-faute offre une lueur.</p>
       <div class="bar"><i id="daily-bar"></i></div>
-      <div style="margin-top:6px;font-size:13px;color:var(--muted);font-weight:800" id="daily-text">0 / 20</div>
     </div>
   </div>
 
-  <div class="maptitle"><h2>Carte d'Hyrule</h2><span id="map-hint">Choisis un sanctuaire</span></div>
+  <div class="maptitle"><h2>Carte d'Hyrule</h2></div>
   <div class="map" id="map"></div>
 
   <div class="foot">
@@ -580,14 +604,14 @@ const N = {
 };
 
 const REGIONS = [
-  {id:'plaines', name:"Plaines d'Hyrule", sub:"1er groupe, les verbes sages", icon:"🌾", n:10},
-  {id:'foret',   name:"Forêt Korogu", sub:"2e groupe : -ir, -issons", icon:"🌳", n:10},
-  {id:'eldin',   name:"Mont Eldin", sub:"1er groupe, les pièges", icon:"🌋", n:14},
+  {id:'plaines', name:"Plaines d'Hyrule", sub:"1er groupe sage", icon:"🌾", n:10},
+  {id:'foret',   name:"Forêt Korogu", sub:"2e groupe (-issons)", icon:"🌳", n:10},
+  {id:'eldin',   name:"Mont Eldin", sub:"1er groupe piégé", icon:"🌋", n:14},
   {id:'zora',    name:"Domaine Zora", sub:"3e groupe en -ir", icon:"💧", n:12},
   {id:'gerudo',  name:"Désert Gerudo", sub:"3e groupe en -re", icon:"🏜️", n:12},
   {id:'hebra',   name:"Monts Hébra", sub:"3e groupe en -oir", icon:"❄️", n:12},
-  {id:'ciel',    name:"Îles célestes", sub:"Les verbes les plus bizarres", icon:"☁️", n:12},
-  {id:'chateau', name:"Château d'Hyrule", sub:"Boss final : Ganondorf, 3 phases", icon:"🏰", n:25, boss:true},
+  {id:'ciel',    name:"Îles célestes", sub:"Les plus bizarres", icon:"☁️", n:12},
+  {id:'chateau', name:"Château d'Hyrule", sub:"Ganondorf, 3 phases", icon:"🏰", n:25, boss:true},
 ];
 
 const VERBS = [];
@@ -758,21 +782,21 @@ const SUBJECTS = [
 // Temps (= univers). persons : indices des personnes jouables. pre : mot avant le sujet. cmp : temps composé = [auxiliaire au temps X].
 // lvl : première année où le temps est introduit. Primaire : programmes 2008 ; collège : BO spécial n°6 du 28 août 2008 (6e : indicatif temps simples et composés y compris le conditionnel, impératif ; 5e : subjonctif présent, antériorité des temps composés ; 4e selon Julien : subjonctif passé, imparfait et plus-que-parfait).
 const TENSES = [
-  {id:'present',  name:'Présent',                     mood:'Indicatif',    lvl:'CM1',   icon:'🌅', color:'#5de3c0', desc:"Ce qui se passe maintenant. Le temps de base, celui de l'aventure."},
-  {id:'futur',    name:'Futur simple',                mood:'Indicatif',    lvl:'CM1',   icon:'🔮', color:'#6ad0ff', desc:"Ce qui arrivera. Radical + ai, as, a, ons, ez, ont."},
-  {id:'imparfait',name:'Imparfait',                   mood:'Indicatif',    lvl:'CM1',   icon:'🕰️', color:'#d7b06a', desc:"Autrefois, les habitudes et les décors du passé. ais, ais, ait, ions, iez, aient."},
-  {id:'pc',       name:'Passé composé',               mood:'Indicatif',    lvl:'CM2',   icon:'📜', color:'#ffb347', cmp:'present', desc:"Une action passée et terminée : avoir ou être au présent + participe passé."},
-  {id:'imperatif',name:'Impératif présent',           mood:'Impératif',    lvl:'CM2',   icon:'⚔️', color:'#ff7357', persons:[1,3,4], desc:"Donner un ordre ou un conseil. Trois personnes seulement, sans sujet."},
-  {id:'ps',       name:'Passé simple',                mood:'Indicatif',    lvl:'CM2',   icon:'🏺', color:'#e8c45e', desc:"Le temps des récits et des légendes : il chanta, ils partirent, elle fut."},
-  {id:'pqp',      name:'Plus-que-parfait',            mood:'Indicatif',    lvl:'6e',    icon:'🪨', color:'#9bd36a', cmp:'imparfait', desc:"Le passé d'avant le passé : avoir ou être à l'imparfait + participe passé."},
-  {id:'fa',       name:'Futur antérieur',             mood:'Indicatif',    lvl:'6e',    icon:'🌠', color:'#bfe6ff', cmp:'futur', desc:"Ce qui sera déjà fini dans le futur : avoir ou être au futur + participe passé."},
-  {id:'cond',     name:'Conditionnel présent',        mood:'Conditionnel', lvl:'6e',    icon:'💭', color:'#b48cff', desc:"Si c'était possible… Radical du futur + terminaisons de l'imparfait."},
-  {id:'condp',    name:'Conditionnel passé',          mood:'Conditionnel', lvl:'6e',    icon:'🌧️', color:'#8fa8d8', cmp:'cond', desc:"Ce qui aurait pu arriver : avoir ou être au conditionnel + participe passé."},
-  {id:'pa',       name:'Passé antérieur',             mood:'Indicatif',    lvl:'5e',    icon:'🏜️', color:'#ffc46a', cmp:'ps', desc:"Dans un récit, juste avant un passé simple : avoir ou être au passé simple + participe passé."},
-  {id:'subj',     name:'Subjonctif présent',          mood:'Subjonctif',   lvl:'5e',    icon:'✨', color:'#ffe9a3', pre:'que', desc:"Il faut que… Le souhait, le doute, l'obligation. e, es, e, ions, iez, ent."},
-  {id:'subjp',    name:'Subjonctif passé',            mood:'Subjonctif',   lvl:'4e',    icon:'🕯️', color:'#f3d577', pre:'que', cmp:'subj', desc:"Il faut que ce soit déjà fait : avoir ou être au subjonctif présent + participe passé."},
-  {id:'subji',    name:'Subjonctif imparfait',        mood:'Subjonctif',   lvl:'4e',    icon:'🌲', color:'#5de38a', pre:'que', desc:"Le subjonctif des livres anciens : qu'il chantât, qu'elle fût, qu'ils vinssent."},
-  {id:'subjpqp',  name:'Subjonctif plus-que-parfait', mood:'Subjonctif',   lvl:'4e',    icon:'🌌', color:'#c9adff', pre:'que', cmp:'subji', desc:"Le sommet de la montagne : avoir ou être au subjonctif imparfait + participe passé."}
+  {id:'present',  name:'Présent',                     mood:'Indicatif',    lvl:'CM1',   icon:'🌅', color:'#5de3c0', ex:"je chante · nous finissons · ils prennent", desc:"Ce qui se passe maintenant. Le temps de base, celui de l'aventure."},
+  {id:'futur',    name:'Futur simple',                mood:'Indicatif',    lvl:'CM1',   icon:'🔮', color:'#6ad0ff', ex:"je chanterai · nous finirons · ils prendront", desc:"Ce qui arrivera. Radical + ai, as, a, ons, ez, ont."},
+  {id:'imparfait',name:'Imparfait',                   mood:'Indicatif',    lvl:'CM1',   icon:'🕰️', color:'#d7b06a', ex:"je chantais · nous finissions · ils prenaient", desc:"Autrefois, les habitudes et les décors du passé. ais, ais, ait, ions, iez, aient."},
+  {id:'pc',       name:'Passé composé',               mood:'Indicatif',    lvl:'CM2',   icon:'📜', color:'#ffb347', cmp:'present', ex:"j'ai chanté · nous sommes partis · ils ont pris", desc:"Une action passée et terminée : avoir ou être au présent + participe passé."},
+  {id:'imperatif',name:'Impératif présent',           mood:'Impératif',    lvl:'CM2',   icon:'⚔️', color:'#ff7357', persons:[1,3,4], ex:"chante · finissons · prenez", desc:"Donner un ordre ou un conseil. Trois personnes seulement, sans sujet."},
+  {id:'ps',       name:'Passé simple',                mood:'Indicatif',    lvl:'CM2',   icon:'🏺', color:'#e8c45e', ex:"il chanta · nous finîmes · ils prirent", desc:"Le temps des récits et des légendes : il chanta, ils partirent, elle fut."},
+  {id:'pqp',      name:'Plus-que-parfait',            mood:'Indicatif',    lvl:'6e',    icon:'🪨', color:'#9bd36a', cmp:'imparfait', ex:"j'avais chanté · nous étions partis · ils avaient pris", desc:"Le passé d'avant le passé : avoir ou être à l'imparfait + participe passé."},
+  {id:'fa',       name:'Futur antérieur',             mood:'Indicatif',    lvl:'6e',    icon:'🌠', color:'#bfe6ff', cmp:'futur', ex:"j'aurai chanté · nous serons partis · ils auront pris", desc:"Ce qui sera déjà fini dans le futur : avoir ou être au futur + participe passé."},
+  {id:'cond',     name:'Conditionnel présent',        mood:'Conditionnel', lvl:'6e',    icon:'💭', color:'#b48cff', ex:"je chanterais · nous finirions · ils prendraient", desc:"Si c'était possible… Radical du futur + terminaisons de l'imparfait."},
+  {id:'condp',    name:'Conditionnel passé',          mood:'Conditionnel', lvl:'6e',    icon:'🌧️', color:'#8fa8d8', cmp:'cond', ex:"j'aurais chanté · nous serions partis · ils auraient pris", desc:"Ce qui aurait pu arriver : avoir ou être au conditionnel + participe passé."},
+  {id:'pa',       name:'Passé antérieur',             mood:'Indicatif',    lvl:'5e',    icon:'🏜️', color:'#ffc46a', cmp:'ps', ex:"il eut chanté · nous fûmes partis · ils eurent pris", desc:"Dans un récit, juste avant un passé simple : avoir ou être au passé simple + participe passé."},
+  {id:'subj',     name:'Subjonctif présent',          mood:'Subjonctif',   lvl:'5e',    icon:'✨', color:'#ffe9a3', pre:'que', ex:"que je chante · que nous finissions · qu'ils prennent", desc:"Il faut que… Le souhait, le doute, l'obligation. e, es, e, ions, iez, ent."},
+  {id:'subjp',    name:'Subjonctif passé',            mood:'Subjonctif',   lvl:'4e',    icon:'🕯️', color:'#f3d577', pre:'que', cmp:'subj', ex:"que j'aie chanté · que nous soyons partis · qu'ils aient pris", desc:"Il faut que ce soit déjà fait : avoir ou être au subjonctif présent + participe passé."},
+  {id:'subji',    name:'Subjonctif imparfait',        mood:'Subjonctif',   lvl:'4e',    icon:'🌲', color:'#5de38a', pre:'que', ex:"qu'il chantât · que nous finissions · qu'ils prissent", desc:"Le subjonctif des livres anciens : qu'il chantât, qu'elle fût, qu'ils vinssent."},
+  {id:'subjpqp',  name:'Subjonctif plus-que-parfait', mood:'Subjonctif',   lvl:'4e',    icon:'🌌', color:'#c9adff', pre:'que', cmp:'subji', ex:"qu'il eût chanté · que nous fussions partis · qu'ils eussent pris", desc:"Le sommet de la montagne : avoir ou être au subjonctif imparfait + participe passé."}
 ];
 const TENSE_BY = Object.fromEntries(TENSES.map(t => [t.id, t]));
 const ALL_P = [0,1,2,3,4,5];
@@ -1365,7 +1389,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 function renderHome(){
   const T = TENSE_BY[TENSE];
   $('#h-name').textContent = P.name || 'Link';
-  $('#h-tense').textContent = T.name; $('#h-tense-desc').textContent = T.mood + ' · ' + T.desc;
+  $('#h-tense').textContent = T.name; $('#h-tense-desc').textContent = T.mood + ' · ' + T.desc; $('#h-tense-ex').textContent = T.ex || '';
   const sel = $('#sel-tense'); sel.innerHTML = TENSES.map(t => `<option value="${t.id}"${t.id===TENSE?' selected':''}>${t.icon} ${t.name}</option>`).join('');
   $('#h-crown').hidden = !S.bossWins; $('#h-wins').textContent = S.bossWins>1 ? `Ganondorf vaincu ${S.bossWins} fois` : 'Ganondorf vaincu';
   $('#h-rupees').textContent = S.rupees;
@@ -1381,11 +1405,11 @@ function renderHome(){
   const weak = weakList();
   $('#chip-review').textContent = weak.length + ' à revoir';
   const cons = consolidateList().length;
-  $('#sage-text').textContent = weak.length ? (weak.length===1 ? "Une conjugaison te résiste encore. Le Sage t'attend pour la vaincre, avec 14 autres points à consolider. Une lueur si c'est sans faute !" : `${weak.length} conjugaisons te résistent. Le Sage t'attend pour les vaincre, avec les autres points à consolider : 15 épreuves, et une lueur si c'est sans faute.`) : cons ? "Aucune erreur en attente, mais le Sage connaît tes anciens points faibles : 15 épreuves pour les consolider, et une lueur si c'est sans faute." : "Aucune erreur à revoir. Le Sage te regarde avec fierté : va explorer un sanctuaire !";
+  $('#sage-text').textContent = weak.length ? (weak.length===1 ? "Une conjugaison te résiste : 15 épreuves pour la vaincre, une lueur si c'est sans faute." : `${weak.length} conjugaisons te résistent : 15 épreuves pour les vaincre, une lueur si c'est sans faute.`) : cons ? "Aucune erreur en attente : 15 épreuves pour consolider tes anciens points faibles." : "Aucune erreur à revoir. Le Sage te regarde avec fierté.";
   $('#btn-review').disabled = weak.length===0 && cons===0;
   if (P.daily.d!==today()) { P.daily = {d:today(),c:0,done:false}; save(); }
   $('#daily-bar').style.width = Math.min(100, P.daily.c/20*100)+'%';
-  $('#daily-text').textContent = P.daily.done ? '✅ Quête du jour accomplie !' : `${P.daily.c} / 20`;
+  $('#daily-text').textContent = P.daily.done ? '✅ Accomplie !' : `${P.daily.c} / 20`;
 
   const map = $('#map'); map.innerHTML = '';
   REGIONS.forEach((R,i) => {
@@ -1401,7 +1425,7 @@ function renderHome(){
     b.innerHTML = `<div class="med">${R.icon}</div><h3>${R.name}</h3><div class="sub">${R.sub} · ${nverbs} verbes</div>
       <div class="stars">${[1,2,3].map(k => k<=st.stars ? '<b>★</b>' : '★').join('')}</div>
       <div class="mast"><div class="bar"><i style="width:${total?mastered/total*100:0}%"></i></div><span class="tabular">${mastered}/${total}</span></div>
-      ${unlocked ? '' : `<div class="need">${R.boss ? 'Gagne une étoile dans chaque région' : 'Gagne une étoile à ' + REGIONS[i-1].name}</div>`}
+      <div class="need${unlocked ? ' soft' : ''}">${unlocked ? (st.plays ? `${st.plays} ${st.plays>1 ? 'expéditions' : 'expédition'}` : 'Jamais exploré') : (R.boss ? '★ requise : chaque région' : '★ requise : ' + REGIONS[i-1].name)}</div>
       ${isNext ? '<span class="new">Nouveau</span>' : ''}`;
     b.disabled = !unlocked;
     b.addEventListener('click', () => { SFX.click(); startRun(R.boss?'boss':'region', R.id); });

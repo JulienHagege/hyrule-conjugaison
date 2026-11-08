@@ -2,8 +2,6 @@
 """Assemble la version 2 (La Légende des Temps) à partir du source v29 et des blocs v2_*.js / engine.js."""
 import re, pathlib, sys
 H = pathlib.Path(__file__).parent
-IMG_DIR = H/'img_v2' if (H/'img_v2').is_dir() else H.parent/'img'   # dans le dépôt : src/img/
-OUT = H/'hyrule-conjugaison.html' if (H/'img_v2').is_dir() else H.parent/'hyrule-conjugaison.html'   # dans le dépôt : src/hyrule-conjugaison.html
 src = (H/'hyrule-conjugaison.v29.html').read_text(encoding='utf-8')
 rd = lambda n: (H/n).read_text(encoding='utf-8')
 NB = ' '
@@ -25,7 +23,7 @@ rep('@media (prefers-reduced-motion:reduce){', rd('v2.css') + '\n@media (prefers
 
 # ---------- HTML : hub avant HOME, barre d'univers, titres
 rep('<!-- HOME -->\n<section class="screen" id="home" hidden>\n  <div class="hero">', rd('v2_hub.html') + '\n<!-- HOME -->\n<section class="screen" id="home" hidden>\n  <div class="unibar"><button class="btn ghost" id="btn-hub">🌌 Tous les univers</button><select id="sel-tense" class="tsel" aria-label="Changer d\'univers"></select></div>\n  <div class="hero">')
-rep('<div class="tag">Le présent de l\'indicatif</div>\n    <h1>Hyrule Conjugaison</h1>', '<div class="tag">La Légende des Temps</div>\n    <h1 id="h-tense">Présent</h1>\n    <p class="tsub" id="h-tense-desc"></p>')
+rep('<div class="tag">Le présent de l\'indicatif</div>\n    <h1>Hyrule Conjugaison</h1>', '<div class="tag">La Légende des Temps</div>\n    <h1 id="h-tense">Présent</h1>\n    <div class="tdef"><p class="tsub" id="h-tense-desc"></p><p class="tex" id="h-tense-ex"></p></div>')
 rep('<div class="maptitle"><h2>Carte d\'Hyrule</h2><span>Choisis un sanctuaire</span></div>', '<div class="maptitle"><h2>Carte d\'Hyrule</h2><span id="map-hint">Choisis un sanctuaire</span></div>')
 rep('<div class="qhead"><span id="q-num"></span><span class="badge" id="q-group"></span></div>', '<div class="qhead"><span id="q-num"></span><span class="badges"><span class="badge tense" id="q-tense"></span><span class="badge" id="q-group"></span></span></div>')
 rep('<h2>📖 Carnet du Sage</h2>', '<h2 id="b-title">📖 Carnet du Sage</h2>')
@@ -71,7 +69,7 @@ rep("setScene(id==='game' && run ? (run.mode==='boss' ? 'chateau' : run.mode==='
 # ---------- Accueil
 rep("  $('#h-name').textContent = S.name || 'Link';", """  const T = TENSE_BY[TENSE];
   $('#h-name').textContent = P.name || 'Link';
-  $('#h-tense').textContent = T.name; $('#h-tense-desc').textContent = T.mood + ' · ' + T.desc;
+  $('#h-tense').textContent = T.name; $('#h-tense-desc').textContent = T.mood + ' · ' + T.desc; $('#h-tense-ex').textContent = T.ex || '';
   const sel = $('#sel-tense'); sel.innerHTML = TENSES.map(t => `<option value="${t.id}"${t.id===TENSE?' selected':''}>${t.icon} ${t.name}</option>`).join('');""")
 rep("  if (S.daily.d!==today()) { S.daily = {d:today(),c:0,done:false}; save(); }\n  $('#daily-bar').style.width = Math.min(100, S.daily.c/20*100)+'%';\n  $('#daily-text').textContent = S.daily.done ? '✅ Quête du jour accomplie !' : `${S.daily.c} / 20`;",
     "  if (P.daily.d!==today()) { P.daily = {d:today(),c:0,done:false}; save(); }\n  $('#daily-bar').style.width = Math.min(100, P.daily.c/20*100)+'%';\n  $('#daily-text').textContent = P.daily.done ? '✅ Quête du jour accomplie !' : `${P.daily.c} / 20`;")
@@ -193,14 +191,67 @@ rep("$('#btn-name').addEventListener('click', () => { const n = $('#inp-name').v
   if (!P){ const p = NEW_PROFILE(n); ROOT.profiles[p.id] = p; ROOT.active = p.id; bind(); save(); track('nouveau-heros'); renderHub(); show('hub'); toast(`Bienvenue à Hyrule, ${n} ! Choisis ton premier univers.`); }
   else { P.name = n; P.updated = Date.now(); save(); if (screen==='book') renderBook(); else if (screen==='hub') renderHub(); else renderHome(); } });""")
 
+# ---------- Accueil allégé : bandeau rang/lueurs sur fond translucide, cartes compactes et alignées, plus d'indication « Choisis un sanctuaire »
+rep("""    <div class="level">
+      <div class="row"><span>Rang : <b id="h-rank">Apprenti</b></span><span id="h-next"></span></div>
+      <div class="bar gold"><i id="h-levelbar"></i></div>
+    </div>
+    <div class="level">
+      <div class="row"><span>Lueurs bienfaisantes : <b id="h-lueur-txt">0</b></span><span id="h-lueur-next"></span></div>
+      <div class="bar lueur"><i id="h-lueurbar"></i></div>
+    </div>""", """    <div class="levels">
+    <div class="level">
+      <div class="row"><span>Rang : <b id="h-rank">Apprenti</b></span><span id="h-next"></span></div>
+      <div class="bar gold"><i id="h-levelbar"></i></div>
+    </div>
+    <div class="level">
+      <div class="row"><span>Lueurs : <b id="h-lueur-txt">0</b></span><span id="h-lueur-next"></span></div>
+      <div class="bar lueur"><i id="h-lueurbar"></i></div>
+    </div>
+    </div>""")
+rep("""    <div class="card sage" id="sage-card">
+      <h2>✦ La révision du Sage</h2>
+      <p id="sage-text">Aucune erreur pour l'instant. Le Sage te regarde avec fierté.</p>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn violet" id="btn-review">Réviser mes erreurs</button>
+        <span class="chip review" id="chip-review">0 à revoir</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>🗓️ Quête du jour</h2>
+      <p>20 bonnes réponses aujourd'hui : <b style="color:var(--gold)">+50 rubis</b>. Chaque sans-faute t'offre une lueur bienfaisante, et finir le Château d'Hyrule aussi.</p>
+      <div class="bar"><i id="daily-bar"></i></div>
+      <div style="margin-top:6px;font-size:13px;color:var(--muted);font-weight:800" id="daily-text">0 / 20</div>
+    </div>""", """    <div class="card sage mini" id="sage-card">
+      <div class="mini-head"><h2>✦ Révision du Sage</h2><span class="chip review" id="chip-review">0 à revoir</span></div>
+      <p id="sage-text">Aucune erreur à revoir. Le Sage te regarde avec fierté.</p>
+      <button class="btn violet" id="btn-review">Réviser mes erreurs</button>
+    </div>
+    <div class="card mini">
+      <div class="mini-head"><h2>🗓️ Quête du jour</h2><span class="chip" id="daily-text">0 / 20</span></div>
+      <p>20 bonnes réponses aujourd'hui : <b style="color:var(--gold)">+50 rubis</b>. Un sans-faute offre une lueur.</p>
+      <div class="bar"><i id="daily-bar"></i></div>
+    </div>""")
+rep("""<div class="maptitle"><h2>Carte d'Hyrule</h2><span id="map-hint">Choisis un sanctuaire</span></div>""", """<div class="maptitle"><h2>Carte d'Hyrule</h2></div>""")
+rep("""  $('#sage-text').textContent = weak.length ? (weak.length===1 ? "Une conjugaison te résiste encore. Le Sage t'attend pour la vaincre, avec 14 autres points à consolider. Une lueur si c'est sans faute !" : `${weak.length} conjugaisons te résistent. Le Sage t'attend pour les vaincre, avec les autres points à consolider : 15 épreuves, et une lueur si c'est sans faute.`) : cons ? "Aucune erreur en attente, mais le Sage connaît tes anciens points faibles : 15 épreuves pour les consolider, et une lueur si c'est sans faute." : "Aucune erreur à revoir. Le Sage te regarde avec fierté : va explorer un sanctuaire !";""",
+    """  $('#sage-text').textContent = weak.length ? (weak.length===1 ? "Une conjugaison te résiste : 15 épreuves pour la vaincre, une lueur si c'est sans faute." : `${weak.length} conjugaisons te résistent : 15 épreuves pour les vaincre, une lueur si c'est sans faute.`) : cons ? "Aucune erreur en attente : 15 épreuves pour consolider tes anciens points faibles." : "Aucune erreur à revoir. Le Sage te regarde avec fierté.";""")
+rep("""  $('#daily-text').textContent = P.daily.done ? '✅ Quête du jour accomplie !' : `${P.daily.c} / 20`;""", """  $('#daily-text').textContent = P.daily.done ? '✅ Accomplie !' : `${P.daily.c} / 20`;""")
+
+# ---------- Carte : cartes de région de même hauteur, sous-titre et condition en une ligne
+for a, c in [("1er groupe, les verbes sages", "1er groupe sage"), ("2e groupe : -ir, -issons", "2e groupe (-issons)"), ("1er groupe, les pièges", "1er groupe piégé"),
+             ("Les verbes les plus bizarres", "Les plus bizarres"), ("Boss final : Ganondorf, 3 phases", "Ganondorf, 3 phases")]:
+    rep('sub:"%s"' % a, 'sub:"%s"' % c)
+rep("""      ${unlocked ? '' : `<div class="need">${R.boss ? 'Gagne une étoile dans chaque région' : 'Gagne une étoile à ' + REGIONS[i-1].name}</div>`}""",
+    """      <div class="need${unlocked ? ' soft' : ''}">${unlocked ? (st.plays ? `${st.plays} ${st.plays>1 ? 'expéditions' : 'expédition'}` : 'Jamais exploré') : (R.boss ? '★ requise : chaque région' : '★ requise : ' + REGIONS[i-1].name)}</div>""")
+
 # ---------- Musiques d'accueil par univers
 rep("  chateau:{root:146.8,", rd('v2_themes.js').strip() + '\n  chateau:{root:146.8,')
 
 
 # ---------- Fonds d'accueil par univers (PixelLab 400×224, sources dans img_v2/)
 import base64
-imgs = ''.join(f'  home_{k}:"data:image/png;base64,{base64.b64encode((IMG_DIR/f"home_{k}.png").read_bytes()).decode()}",\n' for k in ['present','futur','imparfait','pc','imperatif','ps','pqp','fa','cond','subj','subjp','condp','pa','subji','subjpqp'])
+imgs = ''.join(f'  home_{k}:"data:image/png;base64,{base64.b64encode((H/"img_v2"/f"home_{k}.png").read_bytes()).decode()}",\n' for k in ['present','futur','imparfait','pc','imperatif','ps','pqp','fa','cond','subj','subjp','condp','pa','subji','subjpqp'])
 rep('const IMG = {\n', 'const IMG = {\n' + imgs)
 
-OUT.write_text(src, encoding='utf-8')
+(H/'hyrule-conjugaison.html').write_text(src, encoding='utf-8')
 print('écrit', len(src), 'octets')
