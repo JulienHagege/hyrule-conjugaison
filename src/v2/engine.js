@@ -7,6 +7,7 @@
    ========================================================= */
 
 // Temps (= univers). persons : indices des personnes jouables. pre : mot avant le sujet. cmp : temps composé = [auxiliaire au temps X].
+// lvl : première année où le temps est introduit. Primaire : programmes 2008 ; collège : BO spécial n°6 du 28 août 2008 (6e : indicatif temps simples et composés y compris le conditionnel, impératif ; 5e : subjonctif présent, antériorité des temps composés ; 3e : subjonctif passé et aperçu des temps du passé du subjonctif).
 const TENSES = [
   {id:'present',  name:'Présent',                     mood:'Indicatif',    lvl:'CM1',   icon:'🌅', color:'#5de3c0', desc:"Ce qui se passe maintenant. Le temps de base, celui de l'aventure."},
   {id:'futur',    name:'Futur simple',                mood:'Indicatif',    lvl:'CM1',   icon:'🔮', color:'#6ad0ff', desc:"Ce qui arrivera. Radical + ai, as, a, ons, ez, ont."},
@@ -16,13 +17,13 @@ const TENSES = [
   {id:'ps',       name:'Passé simple',                mood:'Indicatif',    lvl:'CM2',   icon:'🏺', color:'#e8c45e', desc:"Le temps des récits et des légendes : il chanta, ils partirent, elle fut."},
   {id:'pqp',      name:'Plus-que-parfait',            mood:'Indicatif',    lvl:'6e',    icon:'🪨', color:'#9bd36a', cmp:'imparfait', desc:"Le passé d'avant le passé : avoir ou être à l'imparfait + participe passé."},
   {id:'fa',       name:'Futur antérieur',             mood:'Indicatif',    lvl:'6e',    icon:'🌠', color:'#bfe6ff', cmp:'futur', desc:"Ce qui sera déjà fini dans le futur : avoir ou être au futur + participe passé."},
-  {id:'cond',     name:'Conditionnel présent',        mood:'Conditionnel', lvl:'5e',    icon:'💭', color:'#b48cff', desc:"Si c'était possible… Radical du futur + terminaisons de l'imparfait."},
-  {id:'subj',     name:'Subjonctif présent',          mood:'Subjonctif',   lvl:'4e',    icon:'✨', color:'#ffe9a3', pre:'que', desc:"Il faut que… Le souhait, le doute, l'obligation. e, es, e, ions, iez, ent."},
-  {id:'subjp',    name:'Subjonctif passé',            mood:'Subjonctif',   lvl:'4e',    icon:'🕯️', color:'#f3d577', pre:'que', cmp:'subj', desc:"Il faut que ce soit déjà fait : avoir ou être au subjonctif présent + participe passé."},
-  {id:'condp',    name:'Conditionnel passé',          mood:'Conditionnel', lvl:'3e',    icon:'🌧️', color:'#8fa8d8', cmp:'cond', desc:"Ce qui aurait pu arriver : avoir ou être au conditionnel + participe passé."},
-  {id:'pa',       name:'Passé antérieur',             mood:'Indicatif',    lvl:'Lycée', icon:'🏜️', color:'#ffc46a', cmp:'ps', desc:"Dans un récit, juste avant un passé simple : avoir ou être au passé simple + participe passé."},
-  {id:'subji',    name:'Subjonctif imparfait',        mood:'Subjonctif',   lvl:'Lycée', icon:'🌲', color:'#5de38a', pre:'que', desc:"Le subjonctif des livres anciens : qu'il chantât, qu'elle fût, qu'ils vinssent."},
-  {id:'subjpqp',  name:'Subjonctif plus-que-parfait', mood:'Subjonctif',   lvl:'Lycée', icon:'🌌', color:'#c9adff', pre:'que', cmp:'subji', desc:"Le sommet de la montagne : avoir ou être au subjonctif imparfait + participe passé."}
+  {id:'cond',     name:'Conditionnel présent',        mood:'Conditionnel', lvl:'6e',    icon:'💭', color:'#b48cff', desc:"Si c'était possible… Radical du futur + terminaisons de l'imparfait."},
+  {id:'condp',    name:'Conditionnel passé',          mood:'Conditionnel', lvl:'6e',    icon:'🌧️', color:'#8fa8d8', cmp:'cond', desc:"Ce qui aurait pu arriver : avoir ou être au conditionnel + participe passé."},
+  {id:'pa',       name:'Passé antérieur',             mood:'Indicatif',    lvl:'5e',    icon:'🏜️', color:'#ffc46a', cmp:'ps', desc:"Dans un récit, juste avant un passé simple : avoir ou être au passé simple + participe passé."},
+  {id:'subj',     name:'Subjonctif présent',          mood:'Subjonctif',   lvl:'5e',    icon:'✨', color:'#ffe9a3', pre:'que', desc:"Il faut que… Le souhait, le doute, l'obligation. e, es, e, ions, iez, ent."},
+  {id:'subjp',    name:'Subjonctif passé',            mood:'Subjonctif',   lvl:'3e',    icon:'🕯️', color:'#f3d577', pre:'que', cmp:'subj', desc:"Il faut que ce soit déjà fait : avoir ou être au subjonctif présent + participe passé."},
+  {id:'subji',    name:'Subjonctif imparfait',        mood:'Subjonctif',   lvl:'3e',    icon:'🌲', color:'#5de38a', pre:'que', desc:"Le subjonctif des livres anciens : qu'il chantât, qu'elle fût, qu'ils vinssent."},
+  {id:'subjpqp',  name:'Subjonctif plus-que-parfait', mood:'Subjonctif',   lvl:'3e',    icon:'🌌', color:'#c9adff', pre:'que', cmp:'subji', desc:"Le sommet de la montagne : avoir ou être au subjonctif imparfait + participe passé."}
 ];
 const TENSE_BY = Object.fromEntries(TENSES.map(t => [t.id, t]));
 const ALL_P = [0,1,2,3,4,5];
