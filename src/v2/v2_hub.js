@@ -1,7 +1,7 @@
 /* =========================================================
    HUB : les univers (un par temps), les héros, la sauvegarde, le Carnet des Temps
    ========================================================= */
-const LEVEL_LABEL = {CM1:'CM1 · les bases', CM2:'CM2', '6e':'6e', '5e':'5e', '4e':'4e', '3e':'3e · les temps des grands récits', 'Lycée':'Lycée'};
+const LEVEL_LABEL = {CM1:'CM1 · les bases', CM2:'CM2', '6e':'6e', '5e':'5e', '4e':'4e · les temps des grands récits', '3e':'3e', 'Lycée':'Lycée'};
 const homeScene = () => IMG['home_'+TENSE] ? 'home_'+TENSE : 'home';
 function switchWorld(tid, go){ if (!TENSE_BY[tid]) return; ROOT.world = tid; bind(); save(); track('univers-'+tid); if (go!==false){ renderHome(); show('home'); } }
 function switchProfile(pid){ if (!ROOT.profiles[pid]) return; ROOT.active = pid; bind(); save(); renderHub(); }
