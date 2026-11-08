@@ -78,7 +78,7 @@ rep("""    const verbs = VERBS.filter(v => v.r===R.id);
     const total = R.boss ? VERBS.length : verbs.length;""", """    const heads = HEADS.filter(h => (R.boss || h.r===R.id) && existsAt(h, TENSE));
     const mastered = heads.filter(h => verbMastery(h)>=2).length, total = heads.length;
     const nverbs = VERBS.filter(v => (R.boss || v.r===R.id) && existsAt(v, TENSE)).length;""")
-rep("<div class=\"sub\">${R.sub} · ${total} verbes</div>", "<div class=\"sub\">${R.sub} · ${nverbs} verbes</div>")
+rep("<div class=\"sub\">${R.sub} · ${total} verbes</div>", "<div class=\"sub\">${R.sub}<span class=\"nv\"> · ${nverbs} verbes</span></div>")
 
 # ---------- Jeu
 rep("  const h = VERBS[v].hard ? 2 : 1;", "  const h = hardAt(VERBS[v], TENSE) ? 2 : 1;")
@@ -242,7 +242,7 @@ for a, c in [("1er groupe, les verbes sages", "1er groupe sage"), ("2e groupe : 
              ("Les verbes les plus bizarres", "Les plus bizarres"), ("Boss final : Ganondorf, 3 phases", "Ganondorf, 3 phases")]:
     rep('sub:"%s"' % a, 'sub:"%s"' % c)
 rep("""      ${unlocked ? '' : `<div class="need">${R.boss ? 'Gagne une étoile dans chaque région' : 'Gagne une étoile à ' + REGIONS[i-1].name}</div>`}""",
-    """      <div class="need${unlocked ? ' soft' : ''}">${unlocked ? (st.plays ? `${st.plays} ${st.plays>1 ? 'expéditions' : 'expédition'}` : 'Jamais exploré') : (R.boss ? '★ requise : chaque région' : '★ requise : ' + REGIONS[i-1].name)}</div>""")
+    """      <div class="need${unlocked ? ' soft' : ''}">${unlocked ? (st.plays ? `${st.plays} ${st.plays>1 ? 'expéditions' : 'expédition'}` : 'Jamais exploré') : '<span class="long">★ requise : </span><span class="short">🔒 </span>' + (R.boss ? 'chaque région' : REGIONS[i-1].name)}</div>""")
 
 # ---------- Musiques d'accueil par univers
 rep("  chateau:{root:146.8,", rd('v2_themes.js').strip() + '\n  chateau:{root:146.8,')

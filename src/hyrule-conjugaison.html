@@ -344,6 +344,10 @@ label.btn{cursor:pointer}
 .region .need.soft{color:var(--muted); font-weight:700}
 /* La carte du Château porte aussi la classe .boss du bandeau de combat : on neutralise ses marges et son centrage */
 .region.boss{align-items:stretch; gap:8px; margin-bottom:0; padding:14px; border-radius:18px}
+.card.mini{height:100%}
+.region h3{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; font-size:clamp(12px,3.4vw,15px)}
+@media (max-width:639px){.region .nv, .region .long{display:none}}
+@media (min-width:640px){.region .short{display:none}}
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
@@ -1422,10 +1426,10 @@ function renderHome(){
     const b = document.createElement('button');
     b.className = 'region' + (unlocked?'':' locked') + (R.boss?' boss':''); b.dataset.r = R.id;
     if (IMG[R.id]) b.style.backgroundImage = `linear-gradient(180deg, rgba(10,19,32,.25) 0%, rgba(10,19,32,.6) 45%, rgba(10,19,32,.95) 100%), url(${IMG[R.id]})`;
-    b.innerHTML = `<div class="med">${R.icon}</div><h3>${R.name}</h3><div class="sub">${R.sub} · ${nverbs} verbes</div>
+    b.innerHTML = `<div class="med">${R.icon}</div><h3>${R.name}</h3><div class="sub">${R.sub}<span class="nv"> · ${nverbs} verbes</span></div>
       <div class="stars">${[1,2,3].map(k => k<=st.stars ? '<b>★</b>' : '★').join('')}</div>
       <div class="mast"><div class="bar"><i style="width:${total?mastered/total*100:0}%"></i></div><span class="tabular">${mastered}/${total}</span></div>
-      <div class="need${unlocked ? ' soft' : ''}">${unlocked ? (st.plays ? `${st.plays} ${st.plays>1 ? 'expéditions' : 'expédition'}` : 'Jamais exploré') : (R.boss ? '★ requise : chaque région' : '★ requise : ' + REGIONS[i-1].name)}</div>
+      <div class="need${unlocked ? ' soft' : ''}">${unlocked ? (st.plays ? `${st.plays} ${st.plays>1 ? 'expéditions' : 'expédition'}` : 'Jamais exploré') : '<span class="long">★ requise : </span><span class="short">🔒 </span>' + (R.boss ? 'chaque région' : REGIONS[i-1].name)}</div>
       ${isNext ? '<span class="new">Nouveau</span>' : ''}`;
     b.disabled = !unlocked;
     b.addEventListener('click', () => { SFX.click(); startRun(R.boss?'boss':'region', R.id); });
