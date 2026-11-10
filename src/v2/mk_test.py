@@ -11,7 +11,7 @@ out = ('<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="v
        + body + '\n<script>\nwindow.addEventListener(\'error\', e => document.body.setAttribute(\'data-err\', (document.body.getAttribute(\'data-err\')||\'\')+\' | \'+e.message+\' @\'+e.lineno));\n' + test + '\n</script>\n</body></html>\n')
 p = H/f't_{name}.html'; p.write_text(out, encoding='utf-8')
 chrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-r = subprocess.run([chrome, '--headless=new', '--disable-gpu', '--no-first-run', '--allow-file-access-from-files', '--autoplay-policy=no-user-gesture-required', f'--virtual-time-budget={sys.argv[3] if len(sys.argv)>3 else 6000}', '--dump-dom', f'file://{p}'], capture_output=True, text=True, timeout=120)
+r = subprocess.run([chrome, '--headless=new', '--disable-gpu', '--no-first-run', '--allow-file-access-from-files', '--autoplay-policy=no-user-gesture-required', '--window-size=' + __import__('os').environ.get('WIN', '800,1000'), f'--virtual-time-budget={sys.argv[3] if len(sys.argv)>3 else 6000}', '--dump-dom', f'file://{p}'], capture_output=True, text=True, timeout=120)
 dom = r.stdout
 for attr in ('data-err', 'data-test'):
     mm = re.search(attr + r'="([^"]*)"', dom)

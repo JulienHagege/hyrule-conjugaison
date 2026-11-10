@@ -348,18 +348,34 @@ label.btn{cursor:pointer}
 .region h3{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; font-size:clamp(12px,3.4vw,15px)}
 @media (max-width:639px){.region .nv, .region .long{display:none}}
 @media (min-width:640px){.region .short{display:none}}
-/* Tutoriel */
-.modal .card.tuto{width:min(480px,100%); padding:22px 20px 18px}
-.tuto-icon{font-size:52px; line-height:1; filter:drop-shadow(0 0 14px rgba(232,196,94,.5))}
-.card.tuto h2{font-size:22px; color:var(--gold); margin:10px 0 8px}
-.card.tuto p{color:var(--fg); font-size:16px; line-height:1.5; margin:0 0 14px; text-align:left; min-height:6.2em}
-.card.tuto p b{color:var(--zonai)}
-.tuto-dots{display:flex; justify-content:center; gap:8px; margin-bottom:14px}
+/* Visite guidée */
+#tour{position:fixed; inset:0; z-index:9}
+#tour.dim{background:rgba(5,10,18,.82)}
+.tour-spot{position:fixed; border:2px solid var(--gold); border-radius:18px; box-shadow:0 0 0 200vmax rgba(5,10,18,.78), 0 0 26px rgba(232,196,94,.55); pointer-events:none; transition:top .25s, left .25s, width .25s, height .25s}
+.tour-panel{position:fixed; left:50%; bottom:max(12px, env(safe-area-inset-bottom,0px)); transform:translateX(-50%); width:min(500px, calc(100% - 24px)); max-height:calc(100% - 24px); overflow:auto; background:linear-gradient(180deg,var(--panel2),var(--panel)); border:1px solid rgba(232,196,94,.45); border-radius:18px; padding:14px 18px 12px; box-shadow:0 18px 50px rgba(0,0,0,.6); text-align:center}
+.tour-panel.center{bottom:auto; top:50%; transform:translate(-50%,-50%)}
+.tour-head{display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:6px}
+.tour-icon{font-size:28px; line-height:1; filter:drop-shadow(0 0 10px rgba(232,196,94,.5))}
+.tour-panel h2{font-size:20px; color:var(--gold); margin:0}
+.tour-panel p{color:var(--fg); font-size:15px; line-height:1.45; margin:0 0 10px; text-align:left}
+.tour-panel p b{color:var(--zonai)}
+.tuto-dots{display:flex; justify-content:center; gap:8px; margin-bottom:10px}
 .tuto-dots i{width:9px; height:9px; border-radius:50%; background:rgba(255,255,255,.18)}
 .tuto-dots i.on{background:var(--gold); box-shadow:0 0 8px rgba(232,196,94,.7)}
 .tuto-actions{display:flex; justify-content:center; gap:10px; flex-wrap:wrap}
-.tuto-skip{margin-top:12px; background:none; border:0; color:var(--muted); font:700 13px var(--font-body); text-decoration:underline; cursor:pointer}
+.tuto-skip{margin-top:10px; background:none; border:0; color:var(--muted); font:700 13px var(--font-body); text-decoration:underline; cursor:pointer}
 .tuto-skip[hidden]{display:none}
+.tour-mock{margin:0 0 12px; text-align:left; pointer-events:none}
+.tour-mock .qcard{padding:14px 14px 12px; max-width:none}
+.tour-mock .sentence{font-size:19px; margin:10px 0 4px}
+.tour-mock .moon-panel{margin-top:0; padding:12px 14px 14px; animation:none}
+.tour-mock .moon-panel .sentence{font-size:18px}
+.tour-mock .choices button{padding:9px 6px; font-size:15px}
+.tour-mock .hearts svg{width:20px; height:18px}
+.mock-input{margin-top:10px; border:2px solid var(--zonai); border-radius:12px; background:#0c1a29; padding:9px 12px; font:900 20px var(--font-body); color:var(--fg); text-align:center}
+.mock-input .caret{display:inline-block; width:2px; height:1em; background:var(--zonai); vertical-align:-2px; margin-left:2px; animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.mock-hearts{justify-content:center; margin-top:10px}
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
@@ -376,7 +392,7 @@ label.btn{cursor:pointer}
     <div class="tag">Hyrule Conjugaison</div>
     <h1>La Légende des Temps</h1>
     <p class="tsub">Quinze univers, un par temps de conjugaison. Chaque univers a sa carte d'Hyrule, ses rubis, ses lueurs et son Carnet. Choisis le tien.</p>
-    <div class="hub-line"><span class="chip"><span class="lab">Héros</span> <span id="hub-name">Link</span></span><button class="btn ghost" id="hub-sound" style="padding:7px 14px">🔊 Son</button><button class="btn ghost" id="hub-music" style="padding:7px 14px">🎵 Musique</button><button class="btn ghost" id="btn-tuto" style="padding:7px 14px">❓ Tutoriel</button></div>
+    <div class="hub-line"><span class="chip"><span class="lab">Héros</span> <span id="hub-name">Link</span></span><button class="btn ghost" id="hub-sound" style="padding:7px 14px">🔊 Son</button><button class="btn ghost" id="hub-music" style="padding:7px 14px">🎵 Musique</button><button class="btn ghost" id="btn-tuto" style="padding:7px 14px">❓ Visite guidée</button></div>
   </div>
 
   <div class="maptitle"><h2>Les univers</h2><span>Choisis un temps</span></div>
@@ -389,7 +405,7 @@ label.btn{cursor:pointer}
       <div class="prof-list" id="prof-list"></div>
       <div class="actions"><input id="inp-newprof" type="text" maxlength="20" placeholder="Nouveau héros : son prénom" aria-label="Prénom du nouveau héros"><button class="btn ghost" id="btn-newprof">＋ Ajouter</button></div>
     </div>
-    <div class="card">
+    <div class="card" id="save-card">
       <h2>💾 Sauvegarde</h2>
       <p>Pour changer d'appareil ou de navigateur : enregistre un fichier ici, charge-le là-bas. Les progrès des deux côtés sont fusionnés, rien n'est perdu.</p>
       <div class="actions"><button class="btn" id="btn-export">⬇️ Sauvegarder (fichier)</button><label class="btn ghost" for="inp-import">⬆️ Charger un fichier</label><input type="file" id="inp-import" accept=".json,application/json,text/plain" hidden></div>
@@ -407,15 +423,16 @@ label.btn{cursor:pointer}
 </section>
 
 
-<!-- TUTORIEL (premier lancement, rejouable depuis le hub) -->
-<div class="modal" id="modal-tuto" hidden>
-  <div class="card tuto">
-    <div class="tuto-icon" id="tuto-icon">⚔️</div>
-    <h2 id="tuto-title">Bienvenue à Hyrule !</h2>
-    <p id="tuto-text"></p>
-    <div class="tuto-dots" id="tuto-dots"></div>
-    <div class="tuto-actions"><button class="btn ghost" id="tuto-prev" hidden>Précédent</button><button class="btn" id="tuto-next">Suivant</button></div>
-    <button type="button" class="tuto-skip" id="tuto-skip">Passer le tutoriel</button>
+<!-- VISITE GUIDÉE (premier lancement, rejouable depuis le hub) -->
+<div id="tour" hidden>
+  <div class="tour-spot" id="tour-spot" hidden></div>
+  <div class="tour-panel" id="tour-panel">
+    <div class="tour-mock" id="tour-mock" hidden></div>
+    <div class="tour-head"><span class="tour-icon" id="tour-icon">⚔️</span><h2 id="tour-title">Bienvenue à Hyrule !</h2></div>
+    <p id="tour-text"></p>
+    <div class="tuto-dots" id="tour-dots"></div>
+    <div class="tuto-actions"><button class="btn ghost" id="tour-prev" hidden>Précédent</button><button class="btn" id="tour-next">Suivant</button></div>
+    <button type="button" class="tuto-skip" id="tour-skip">Passer la visite</button>
   </div>
 </div>
 
@@ -2033,27 +2050,56 @@ $('#btn-paste').addEventListener('click', () => { SFX.click(); const box = $('#p
 $('#btn-paste-ok').addEventListener('click', () => { const t = $('#ta-code').value.trim(); if (!t){ saveMsg('Colle d\'abord un code.', false); return; } importFromText(t); });
 
 /* =========================================================
-   TUTORIEL : cinq étapes au premier lancement, rejouable depuis le hub
+   VISITE GUIDÉE : au premier lancement, puis via « ❓ Visite guidée » dans le hub.
+   Chaque étape montre le vrai écran (hub, accueil) avec la zone concernée éclairée,
+   ou une maquette (épreuve, Lune de sang) quand l'écran demande une partie en cours.
    ========================================================= */
+const MOCK = {
+  quest: () => `<div class="qcard"><div class="qhead"><span>Épreuve 1 / 10</span><span class="badges"><span class="badge tense">🌅 Présent</span></span></div>
+    <div class="sentence"><span class="subj">Link</span><span class="blank">&nbsp;</span><span class="rest">l'épée dans le coffre.</span></div><div class="verbline">Verbe : <b>prendre</b></div>
+    <div class="mock-input">prend<span class="caret"></span></div>
+    <div class="mock-hearts hearts">${Array.from({length:5}, (_, i) => HEART.replace('<svg', `<svg class="${i<4?'':'off'}"`)).join('')}</div></div>`,
+  moon: () => `<div class="moon-panel"><div class="moon-hud"><span>🌕 1 / 5</span><span class="hearts">${Array.from({length:5}, () => HEART).join('')}</span><span class="tabular" style="color:var(--rupee)">+30 rubis</span></div>
+    <div class="timer"><i style="width:62%"></i></div>
+    <div class="sentence"><span class="subj">Nous</span><span class="blank">&nbsp;</span><span class="rest">le Lynel argenté.</span></div><div class="verbline">Verbe : <b>craindre</b></div>
+    <div class="choices"><button type="button" disabled>craindons</button><button type="button" disabled class="good">craignons</button><button type="button" disabled>craignions</button><button type="button" disabled>crainons</button></div></div>`
+};
 const TUTO = [
-  {icon:'⚔️', title:'Bienvenue à Hyrule !', text:"Tu es un héros d'Hyrule. À chaque épreuve, une phrase a un trou : écris le verbe bien conjugué, puis valide. Chaque bonne réponse rapporte des <b>rubis</b>. Tu as <b>5 cœurs</b> : une erreur en coûte un, le Sage t'explique la règle et tu recopies la bonne forme pour la retenir."},
-  {icon:'🌌', title:'Les univers', text:"Chaque temps de conjugaison est un <b>univers</b> : le présent, le futur, l'imparfait… Dans chaque univers, une carte d'Hyrule avec <b>8 régions</b> : gagne une étoile dans une région pour ouvrir la suivante, jusqu'au <b>Château</b> de Ganondorf. Tu changes d'univers avec le sélecteur en haut de l'écran, ou depuis « Tous les univers »."},
-  {icon:'✦', title:'Le Sage et les lueurs', text:"Le Sage se souvient de tes erreurs et te les fait retravailler dans la <b>Révision du Sage</b>. Une partie sans faute t'offre une <b>lueur bienfaisante</b> : avec 4 lueurs, tu gagnes un cœur de plus pour toujours. Le <b>Carnet du Sage</b> montre les verbes que tu maîtrises."},
-  {icon:'🌕', title:'La Lune de sang', text:"Parfois, en pleine partie, la <b>Lune de sang</b> se lève : 5 questions à choix, très rapides. Choisis la bonne forme avant la fin du compte à rebours pour gagner des rubis bonus. Trop lent ou faux : un cœur perdu ! Elle ne se lève jamais pendant le Château."},
-  {icon:'💾', title:'Sauvegarder', text:"Ta progression se garde toute seule sur cet appareil. Pour continuer sur un autre téléphone ou ordinateur : « Tous les univers » puis <b>Sauvegarde</b> : « Copier un code » ici, « Coller un code » là-bas (ou un fichier). Les deux progressions se fusionnent, rien n'est jamais perdu."}
+  {mock:'quest', icon:'⚔️', title:'Bienvenue à Hyrule !', text:"À chaque épreuve, une phrase a un trou : écris le verbe bien conjugué, puis valide. Chaque bonne réponse rapporte des <b>rubis</b>. Tu as <b>5 cœurs</b> : une erreur en coûte un, le Sage t'explique la règle et tu recopies la bonne forme pour la retenir."},
+  {screen:'hub', target:'#uni-grid', icon:'🌌', title:'Les univers', text:"Chaque temps de conjugaison est un <b>univers</b> : présent, futur, imparfait… Ils sont classés par classe, du CM1 à la 4e. Touche un univers pour y entrer ; tu peux en changer quand tu veux."},
+  {screen:'home', target:'.hero .hud', icon:'💎', title:'Ton héros', text:"Dans chaque univers tu as tes propres <b>rubis</b>, <b>lueurs</b> et <b>cœurs</b>. Les rubis font monter ton <b>rang</b>, d'Apprenti à Légende. Le sélecteur tout en haut permet de changer d'univers, « Tous les univers » ramène ici."},
+  {screen:'home', target:'#map', icon:'🗺️', title:"La carte d'Hyrule", text:"Huit <b>régions</b>, chacune avec ses verbes. Gagne une étoile dans une région pour ouvrir la suivante, jusqu'au <b>Château</b> où t'attend Ganondorf. Trois étoiles par région : sans faute, c'est la troisième."},
+  {screen:'home', target:'#sage-card', icon:'✦', title:'Le Sage et les lueurs', text:"Le Sage se souvient de tes erreurs et te les fait retravailler dans la <b>Révision du Sage</b>. Une partie sans faute t'offre une <b>lueur bienfaisante</b> : avec 4 lueurs, tu gagnes un cœur de plus pour toujours."},
+  {mock:'moon', icon:'🌕', title:'La Lune de sang', text:"Parfois, en pleine partie, la <b>Lune de sang</b> se lève : 5 questions à choix, très rapides. Touche la bonne forme avant la fin de la barre rouge pour gagner des rubis bonus. Trop lent ou faux : un cœur perdu ! Jamais pendant le Château."},
+  {screen:'hub', target:'#save-card', icon:'💾', title:'Sauvegarder', text:"Ta progression se garde toute seule sur cet appareil. Pour continuer sur un autre téléphone ou ordinateur : <b>Copier un code</b> ici, <b>Coller un code</b> là-bas (ou un fichier). Les deux progressions se fusionnent, rien n'est jamais perdu."}
 ];
-let tutoI = 0;
-function openTuto(){ tutoI = 0; renderTuto(); $('#modal-tuto').hidden = false; }
-function closeTuto(){ $('#modal-tuto').hidden = true; if (!ROOT.tuto){ ROOT.tuto = true; save(); } }
-function renderTuto(){
-  const s = TUTO[tutoI], last = tutoI===TUTO.length-1;
-  $('#tuto-icon').textContent = s.icon; $('#tuto-title').textContent = s.title; $('#tuto-text').innerHTML = s.text;
-  $('#tuto-dots').innerHTML = TUTO.map((_, i) => `<i class="${i===tutoI?'on':''}"></i>`).join('');
-  $('#tuto-next').textContent = last ? "C'est parti !" : 'Suivant'; $('#tuto-prev').hidden = tutoI===0; $('#tuto-skip').hidden = last;
+let tourI = 0, tourOn = false;
+function openTuto(){ if (run) return; tourI = 0; tourOn = true; $('#tour').hidden = false; tourStep(); }
+function closeTuto(){ tourOn = false; $('#tour').hidden = true; if (!ROOT.tuto){ ROOT.tuto = true; save(); } }
+function tourStep(){
+  const s = TUTO[tourI], last = tourI===TUTO.length-1, layer = $('#tour'), panel = $('#tour-panel');
+  if (s.screen && screen!==s.screen){ if (s.screen==='hub'){ renderHub(); show('hub'); } else { renderHome(); show('home'); } }
+  $('#tour-icon').textContent = s.icon; $('#tour-title').textContent = s.title; $('#tour-text').innerHTML = s.text;
+  $('#tour-dots').innerHTML = TUTO.map((_, i) => `<i class="${i===tourI?'on':''}"></i>`).join('');
+  $('#tour-next').textContent = last ? "C'est parti !" : 'Suivant'; $('#tour-prev').hidden = tourI===0; $('#tour-skip').hidden = last;
+  const mock = $('#tour-mock'); mock.hidden = !s.mock; mock.innerHTML = s.mock ? MOCK[s.mock]() : '';
+  layer.classList.toggle('dim', !s.target); panel.classList.toggle('center', !s.target); $('#tour-spot').hidden = !s.target;
+  panel.scrollTop = 0;
+  if (s.target){ placeSpot(true); requestAnimationFrame(() => placeSpot(false)); setTimeout(() => placeSpot(false), 60); }
 }
-$('#tuto-next').addEventListener('click', () => { SFX.click(); if (tutoI < TUTO.length-1){ tutoI++; renderTuto(); } else { SFX.heart(); closeTuto(); } });
-$('#tuto-prev').addEventListener('click', () => { SFX.click(); if (tutoI > 0){ tutoI--; renderTuto(); } });
-$('#tuto-skip').addEventListener('click', () => { SFX.click(); closeTuto(); });
+function placeSpot(scroll){
+  const s = TUTO[tourI]; if (!tourOn || !s || !s.target) return;
+  const el = document.querySelector(s.target), spot = $('#tour-spot'); if (!el){ spot.hidden = true; return; }
+  const pad = 8, top0 = 12, maxBottom = $('#tour-panel').getBoundingClientRect().top - 10;
+  if (scroll){ const r0 = el.getBoundingClientRect(); const room = maxBottom - top0; const want = r0.height + 2*pad < room ? top0 + (room - r0.height)/2 : top0 + pad; window.scrollBy({top: r0.top - want, behavior:'auto'}); }
+  const r = el.getBoundingClientRect(), top = r.top - pad, bottom = Math.min(r.bottom + pad, maxBottom);
+  spot.hidden = bottom - top < 24;
+  Object.assign(spot.style, {left: (r.left - pad)+'px', top: top+'px', width: (r.width + 2*pad)+'px', height: Math.max(0, bottom - top)+'px'});
+}
+addEventListener('scroll', () => placeSpot(false), {passive:true}); addEventListener('resize', () => placeSpot(false));
+$('#tour-next').addEventListener('click', () => { SFX.click(); if (tourI < TUTO.length-1){ tourI++; tourStep(); } else { SFX.heart(); closeTuto(); } });
+$('#tour-prev').addEventListener('click', () => { SFX.click(); if (tourI > 0){ tourI--; tourStep(); } });
+$('#tour-skip').addEventListener('click', () => { SFX.click(); closeTuto(); });
 $('#btn-tuto').addEventListener('click', () => { SFX.click(); openTuto(); });
 
 /* =========================================================
