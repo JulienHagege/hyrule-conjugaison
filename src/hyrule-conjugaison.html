@@ -348,6 +348,18 @@ label.btn{cursor:pointer}
 .region h3{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; font-size:clamp(12px,3.4vw,15px)}
 @media (max-width:639px){.region .nv, .region .long{display:none}}
 @media (min-width:640px){.region .short{display:none}}
+/* Tutoriel */
+.modal .card.tuto{width:min(480px,100%); padding:22px 20px 18px}
+.tuto-icon{font-size:52px; line-height:1; filter:drop-shadow(0 0 14px rgba(232,196,94,.5))}
+.card.tuto h2{font-size:22px; color:var(--gold); margin:10px 0 8px}
+.card.tuto p{color:var(--fg); font-size:16px; line-height:1.5; margin:0 0 14px; text-align:left; min-height:6.2em}
+.card.tuto p b{color:var(--zonai)}
+.tuto-dots{display:flex; justify-content:center; gap:8px; margin-bottom:14px}
+.tuto-dots i{width:9px; height:9px; border-radius:50%; background:rgba(255,255,255,.18)}
+.tuto-dots i.on{background:var(--gold); box-shadow:0 0 8px rgba(232,196,94,.7)}
+.tuto-actions{display:flex; justify-content:center; gap:10px; flex-wrap:wrap}
+.tuto-skip{margin-top:12px; background:none; border:0; color:var(--muted); font:700 13px var(--font-body); text-decoration:underline; cursor:pointer}
+.tuto-skip[hidden]{display:none}
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
@@ -364,7 +376,7 @@ label.btn{cursor:pointer}
     <div class="tag">Hyrule Conjugaison</div>
     <h1>La Légende des Temps</h1>
     <p class="tsub">Quinze univers, un par temps de conjugaison. Chaque univers a sa carte d'Hyrule, ses rubis, ses lueurs et son Carnet. Choisis le tien.</p>
-    <div class="hub-line"><span class="chip"><span class="lab">Héros</span> <span id="hub-name">Link</span></span><button class="btn ghost" id="hub-sound" style="padding:7px 14px">🔊 Son</button><button class="btn ghost" id="hub-music" style="padding:7px 14px">🎵 Musique</button></div>
+    <div class="hub-line"><span class="chip"><span class="lab">Héros</span> <span id="hub-name">Link</span></span><button class="btn ghost" id="hub-sound" style="padding:7px 14px">🔊 Son</button><button class="btn ghost" id="hub-music" style="padding:7px 14px">🎵 Musique</button><button class="btn ghost" id="btn-tuto" style="padding:7px 14px">❓ Tutoriel</button></div>
   </div>
 
   <div class="maptitle"><h2>Les univers</h2><span>Choisis un temps</span></div>
@@ -394,6 +406,18 @@ label.btn{cursor:pointer}
   </div>
 </section>
 
+
+<!-- TUTORIEL (premier lancement, rejouable depuis le hub) -->
+<div class="modal" id="modal-tuto" hidden>
+  <div class="card tuto">
+    <div class="tuto-icon" id="tuto-icon">⚔️</div>
+    <h2 id="tuto-title">Bienvenue à Hyrule !</h2>
+    <p id="tuto-text"></p>
+    <div class="tuto-dots" id="tuto-dots"></div>
+    <div class="tuto-actions"><button class="btn ghost" id="tuto-prev" hidden>Précédent</button><button class="btn" id="tuto-next">Suivant</button></div>
+    <button type="button" class="tuto-skip" id="tuto-skip">Passer le tutoriel</button>
+  </div>
+</div>
 
 <!-- HOME -->
 <section class="screen" id="home" hidden>
@@ -1088,7 +1112,7 @@ window.addEventListener('error', e => logErr(e.error || e.message));
 window.addEventListener('unhandledrejection', e => logErr(e.reason));
 const DEFAULT = () => ({ rupees:0, lueurs:0, bonusHearts:0, items:{}, regions:{}, tot:{r:0,w:0}, moonRuns:0, bossWins:0, updated:0 });
 const NEW_PROFILE = name => ({ id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), name:name||'', created:Date.now(), updated:Date.now(), daily:{d:'',c:0,done:false}, unlockAll:false, worlds:{} });
-const NEW_ROOT = () => ({ v:2, profiles:{}, deleted:{}, active:null, world:'present', sound:true, music:true, updated:0 });
+const NEW_ROOT = () => ({ v:2, profiles:{}, deleted:{}, active:null, world:'present', sound:true, music:true, tuto:false, updated:0 });
 let ROOT = NEW_ROOT(), P = null, S = DEFAULT(), TENSE = 'present';
 const famHead = name => FAM_OF[name] || name;
 // Les statistiques par verbe de l'ancienne version sont fusionnées dans leur famille.
@@ -2009,6 +2033,30 @@ $('#btn-paste').addEventListener('click', () => { SFX.click(); const box = $('#p
 $('#btn-paste-ok').addEventListener('click', () => { const t = $('#ta-code').value.trim(); if (!t){ saveMsg('Colle d\'abord un code.', false); return; } importFromText(t); });
 
 /* =========================================================
+   TUTORIEL : cinq étapes au premier lancement, rejouable depuis le hub
+   ========================================================= */
+const TUTO = [
+  {icon:'⚔️', title:'Bienvenue à Hyrule !', text:"Tu es un héros d'Hyrule. À chaque épreuve, une phrase a un trou : écris le verbe bien conjugué, puis valide. Chaque bonne réponse rapporte des <b>rubis</b>. Tu as <b>5 cœurs</b> : une erreur en coûte un, le Sage t'explique la règle et tu recopies la bonne forme pour la retenir."},
+  {icon:'🌌', title:'Les univers', text:"Chaque temps de conjugaison est un <b>univers</b> : le présent, le futur, l'imparfait… Dans chaque univers, une carte d'Hyrule avec <b>8 régions</b> : gagne une étoile dans une région pour ouvrir la suivante, jusqu'au <b>Château</b> de Ganondorf. Tu changes d'univers avec le sélecteur en haut de l'écran, ou depuis « Tous les univers »."},
+  {icon:'✦', title:'Le Sage et les lueurs', text:"Le Sage se souvient de tes erreurs et te les fait retravailler dans la <b>Révision du Sage</b>. Une partie sans faute t'offre une <b>lueur bienfaisante</b> : avec 4 lueurs, tu gagnes un cœur de plus pour toujours. Le <b>Carnet du Sage</b> montre les verbes que tu maîtrises."},
+  {icon:'🌕', title:'La Lune de sang', text:"Parfois, en pleine partie, la <b>Lune de sang</b> se lève : 5 questions à choix, très rapides. Choisis la bonne forme avant la fin du compte à rebours pour gagner des rubis bonus. Trop lent ou faux : un cœur perdu ! Elle ne se lève jamais pendant le Château."},
+  {icon:'💾', title:'Sauvegarder', text:"Ta progression se garde toute seule sur cet appareil. Pour continuer sur un autre téléphone ou ordinateur : « Tous les univers » puis <b>Sauvegarde</b> : « Copier un code » ici, « Coller un code » là-bas (ou un fichier). Les deux progressions se fusionnent, rien n'est jamais perdu."}
+];
+let tutoI = 0;
+function openTuto(){ tutoI = 0; renderTuto(); $('#modal-tuto').hidden = false; }
+function closeTuto(){ $('#modal-tuto').hidden = true; if (!ROOT.tuto){ ROOT.tuto = true; save(); } }
+function renderTuto(){
+  const s = TUTO[tutoI], last = tutoI===TUTO.length-1;
+  $('#tuto-icon').textContent = s.icon; $('#tuto-title').textContent = s.title; $('#tuto-text').innerHTML = s.text;
+  $('#tuto-dots').innerHTML = TUTO.map((_, i) => `<i class="${i===tutoI?'on':''}"></i>`).join('');
+  $('#tuto-next').textContent = last ? "C'est parti !" : 'Suivant'; $('#tuto-prev').hidden = tutoI===0; $('#tuto-skip').hidden = last;
+}
+$('#tuto-next').addEventListener('click', () => { SFX.click(); if (tutoI < TUTO.length-1){ tutoI++; renderTuto(); } else { SFX.heart(); closeTuto(); } });
+$('#tuto-prev').addEventListener('click', () => { SFX.click(); if (tutoI > 0){ tutoI--; renderTuto(); } });
+$('#tuto-skip').addEventListener('click', () => { SFX.click(); closeTuto(); });
+$('#btn-tuto').addEventListener('click', () => { SFX.click(); openTuto(); });
+
+/* =========================================================
    ÉVÉNEMENTS
    ========================================================= */
 const ACC = ['é','è','ê','ë','à','â','ç','î','ï','ô','û','ù','ü','œ'];
@@ -2047,7 +2095,7 @@ $('#b-reset').addEventListener('click', () => $('#b-confirm').classList.add('on'
 $('#b-reset-no').addEventListener('click', () => $('#b-confirm').classList.remove('on'));
 $('#b-reset-yes').addEventListener('click', () => { P.worlds[TENSE] = S = DEFAULT(); S.resetAt = Date.now(); save(); $('#b-confirm').classList.remove('on'); renderBook(); toast(`Progression effacée pour « ${TENSE_BY[TENSE].name} ». Une nouvelle aventure commence.`); });
 $('#btn-name').addEventListener('click', () => { const n = $('#inp-name').value.trim() || 'Link'; $('#modal-name').hidden = true; SFX.heart();
-  if (!P){ const p = NEW_PROFILE(n); ROOT.profiles[p.id] = p; ROOT.active = p.id; bind(); save(); track('nouveau-heros'); renderHub(); show('hub'); toast(`Bienvenue à Hyrule, ${n} ! Choisis ton premier univers.`); }
+  if (!P){ const p = NEW_PROFILE(n); ROOT.profiles[p.id] = p; ROOT.active = p.id; bind(); save(); track('nouveau-heros'); renderHub(); show('hub'); if (!ROOT.tuto) openTuto(); else toast(`Bienvenue à Hyrule, ${n} ! Choisis ton premier univers.`); }
   else { P.name = n; P.updated = Date.now(); save(); if (screen==='book') renderBook(); else if (screen==='hub') renderHub(); else renderHome(); } });
 $('#inp-name').addEventListener('keydown', e => { if (e.key==='Enter') $('#btn-name').click(); });
 document.addEventListener('keydown', e => { if (e.key==='Enter' && run && run.phase==='fb' && screen==='game'){ const b = $('#btn-next'); if (b && document.activeElement!==b) { e.preventDefault(); next(); } } });

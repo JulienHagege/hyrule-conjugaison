@@ -17,7 +17,7 @@ window.addEventListener('error', e => logErr(e.error || e.message));
 window.addEventListener('unhandledrejection', e => logErr(e.reason));
 const DEFAULT = () => ({ rupees:0, lueurs:0, bonusHearts:0, items:{}, regions:{}, tot:{r:0,w:0}, moonRuns:0, bossWins:0, updated:0 });
 const NEW_PROFILE = name => ({ id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), name:name||'', created:Date.now(), updated:Date.now(), daily:{d:'',c:0,done:false}, unlockAll:false, worlds:{} });
-const NEW_ROOT = () => ({ v:2, profiles:{}, deleted:{}, active:null, world:'present', sound:true, music:true, updated:0 });
+const NEW_ROOT = () => ({ v:2, profiles:{}, deleted:{}, active:null, world:'present', sound:true, music:true, tuto:false, updated:0 });
 let ROOT = NEW_ROOT(), P = null, S = DEFAULT(), TENSE = 'present';
 const famHead = name => FAM_OF[name] || name;
 // Les statistiques par verbe de l'ancienne version sont fusionnées dans leur famille.

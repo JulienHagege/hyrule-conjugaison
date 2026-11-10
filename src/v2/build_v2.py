@@ -56,7 +56,7 @@ src = src[:i0] + rd('v2_state.js').strip() + '\n\n' + src[i1:]
 i0 = src.index('/* =========================================================\n   SYNCHRO ENTRE APPAREILS'); i1 = src.index('</script>', i0)
 src = src[:i0] + rd('v2_sync.js').strip() + '\n' + src[i1:]
 # hub : avant la section ÉVÉNEMENTS
-rep('/* =========================================================\n   ÉVÉNEMENTS', rd('v2_hub.js').strip() + '\n\n/* =========================================================\n   ÉVÉNEMENTS')
+rep('/* =========================================================\n   ÉVÉNEMENTS', rd('v2_hub.js').strip() + '\n\n' + rd('v2_tuto.js').strip() + '\n\n/* =========================================================\n   ÉVÉNEMENTS')
 
 # ---------- Réglages globaux
 src = src.replace('S.sound', 'ROOT.sound').replace('S.music', 'ROOT.music')
@@ -188,7 +188,7 @@ rep("$('#b-reset-yes').addEventListener('click', () => { const name = S.name; S 
     "$('#b-reset-yes').addEventListener('click', () => { P.worlds[TENSE] = S = DEFAULT(); S.resetAt = Date.now(); save(); $('#b-confirm').classList.remove('on'); renderBook(); toast(`Progression effacée pour « ${TENSE_BY[TENSE].name} ». Une nouvelle aventure commence.`); });")
 rep("$('#btn-name').addEventListener('click', () => { const n = $('#inp-name').value.trim(); S.name = n || 'Link'; save(); track('nouveau-heros'); $('#modal-name').hidden = true; renderHome(); SFX.heart(); });",
     """$('#btn-name').addEventListener('click', () => { const n = $('#inp-name').value.trim() || 'Link'; $('#modal-name').hidden = true; SFX.heart();
-  if (!P){ const p = NEW_PROFILE(n); ROOT.profiles[p.id] = p; ROOT.active = p.id; bind(); save(); track('nouveau-heros'); renderHub(); show('hub'); toast(`Bienvenue à Hyrule, ${n} ! Choisis ton premier univers.`); }
+  if (!P){ const p = NEW_PROFILE(n); ROOT.profiles[p.id] = p; ROOT.active = p.id; bind(); save(); track('nouveau-heros'); renderHub(); show('hub'); if (!ROOT.tuto) openTuto(); else toast(`Bienvenue à Hyrule, ${n} ! Choisis ton premier univers.`); }
   else { P.name = n; P.updated = Date.now(); save(); if (screen==='book') renderBook(); else if (screen==='hub') renderHub(); else renderHome(); } });""")
 
 # ---------- Accueil allégé : bandeau rang/lueurs sur fond translucide, cartes compactes et alignées, plus d'indication « Choisis un sanctuaire »

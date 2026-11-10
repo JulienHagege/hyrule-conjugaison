@@ -65,3 +65,15 @@ label.btn{cursor:pointer}
 .region h3{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; font-size:clamp(12px,3.4vw,15px)}
 @media (max-width:639px){.region .nv, .region .long{display:none}}
 @media (min-width:640px){.region .short{display:none}}
+/* Tutoriel */
+.modal .card.tuto{width:min(480px,100%); padding:22px 20px 18px}
+.tuto-icon{font-size:52px; line-height:1; filter:drop-shadow(0 0 14px rgba(232,196,94,.5))}
+.card.tuto h2{font-size:22px; color:var(--gold); margin:10px 0 8px}
+.card.tuto p{color:var(--fg); font-size:16px; line-height:1.5; margin:0 0 14px; text-align:left; min-height:6.2em}
+.card.tuto p b{color:var(--zonai)}
+.tuto-dots{display:flex; justify-content:center; gap:8px; margin-bottom:14px}
+.tuto-dots i{width:9px; height:9px; border-radius:50%; background:rgba(255,255,255,.18)}
+.tuto-dots i.on{background:var(--gold); box-shadow:0 0 8px rgba(232,196,94,.7)}
+.tuto-actions{display:flex; justify-content:center; gap:10px; flex-wrap:wrap}
+.tuto-skip{margin-top:12px; background:none; border:0; color:var(--muted); font:700 13px var(--font-body); text-decoration:underline; cursor:pointer}
+.tuto-skip[hidden]{display:none}

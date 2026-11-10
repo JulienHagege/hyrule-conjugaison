@@ -5,7 +5,7 @@
     <div class="tag">Hyrule Conjugaison</div>
     <h1>La Légende des Temps</h1>
     <p class="tsub">Quinze univers, un par temps de conjugaison. Chaque univers a sa carte d'Hyrule, ses rubis, ses lueurs et son Carnet. Choisis le tien.</p>
-    <div class="hub-line"><span class="chip"><span class="lab">Héros</span> <span id="hub-name">Link</span></span><button class="btn ghost" id="hub-sound" style="padding:7px 14px">🔊 Son</button><button class="btn ghost" id="hub-music" style="padding:7px 14px">🎵 Musique</button></div>
+    <div class="hub-line"><span class="chip"><span class="lab">Héros</span> <span id="hub-name">Link</span></span><button class="btn ghost" id="hub-sound" style="padding:7px 14px">🔊 Son</button><button class="btn ghost" id="hub-music" style="padding:7px 14px">🎵 Musique</button><button class="btn ghost" id="btn-tuto" style="padding:7px 14px">❓ Tutoriel</button></div>
   </div>
 
   <div class="maptitle"><h2>Les univers</h2><span>Choisis un temps</span></div>
@@ -35,3 +35,15 @@
   </div>
 </section>
 
+
+<!-- TUTORIEL (premier lancement, rejouable depuis le hub) -->
+<div class="modal" id="modal-tuto" hidden>
+  <div class="card tuto">
+    <div class="tuto-icon" id="tuto-icon">⚔️</div>
+    <h2 id="tuto-title">Bienvenue à Hyrule !</h2>
+    <p id="tuto-text"></p>
+    <div class="tuto-dots" id="tuto-dots"></div>
+    <div class="tuto-actions"><button class="btn ghost" id="tuto-prev" hidden>Précédent</button><button class="btn" id="tuto-next">Suivant</button></div>
+    <button type="button" class="tuto-skip" id="tuto-skip">Passer le tutoriel</button>
+  </div>
+</div>
