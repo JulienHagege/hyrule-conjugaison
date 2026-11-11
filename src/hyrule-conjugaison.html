@@ -1543,8 +1543,8 @@ function buildQuestions(mode, regionId){
     });
     return [...wq, ...rq].sort(() => Math.random()-.5).map(q => mkQ(q.v,q.p));
   }
-  // Deux épreuves par sanctuaire viennent des verbes essentiels (être, avoir, aller, faire, dire...), quelle que soit la région.
-  const corePool = []; HEADS.filter(V => V.core && existsAt(V, TENSE)).forEach(V => persons(V).forEach(p => corePool.push({v:V.id,p})));
+  // Jusqu'à deux épreuves par sanctuaire rappellent des verbes essentiels déjà rencontrés (ceux des régions précédentes). Aucun verbe d'une région pas encore atteinte.
+  const corePool = []; HEADS.filter(V => V.core && existsAt(V, TENSE) && regIdx(V.r)<regIdx(regionId)).forEach(V => persons(V).forEach(p => corePool.push({v:V.id,p})));
   const coreQ = sample(corePool, 2, q => weightOf(q.v,q.p));
   const rest = sample(pool.filter(q => !coreQ.some(c => c.v===q.v)), R.n-coreQ.length, q => weightOf(q.v,q.p));
   return [...coreQ, ...rest].sort(() => Math.random()-.5).map(q => mkQ(q.v,q.p));
@@ -1832,8 +1832,10 @@ function scheduleMoon(){
   if (S.moonRuns>=2 || Math.random()<.5){ S.moonRuns = 0; run.moonAt = 3 + Math.floor(Math.random()*Math.max(1, run.qs.length-4)); }
   save();
 }
+const regIdx = id => REGIONS.findIndex(r => r.id===id);
 function moonPool(){
-  const pool = []; HEADS.filter(V => existsAt(V, TENSE)).forEach(V => persons(V).forEach(p => pool.push({v:V.id,p})));
+  const lim = run.mode==='region' ? regIdx(run.regionId) : 99;
+  const pool = []; HEADS.filter(V => existsAt(V, TENSE) && regIdx(V.r)<=lim).forEach(V => persons(V).forEach(p => pool.push({v:V.id,p})));
   return sample(pool, MOON_N, q => { const V = VERBS[q.v]; let w = weightOf(q.v,q.p); if (V.r===run.regionId) w *= 2.5; if (V.r==='plaines'||V.r==='foret') w *= .3; return w; }).map(q => mkQ(q.v,q.p));
 }
 // Mauvaises réponses plausibles pour la Lune de sang : fautes typiques sur la forme juste, autres personnes, et aux temps composés

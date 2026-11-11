@@ -24,6 +24,7 @@ try{
   // C. changement d'univers
   switchWorld('futur'); T('switch futur', TENSE==='futur' && S.rupees===0 && P.worlds.present.rupees===1234 && $('#h-tense').textContent==='Futur simple' && screen==='home');
   let qs = buildQuestions('region','plaines'); T('questions futur plaines', qs.length===10 && qs.every(q => q.t==='futur' && q.a.length && /r(ai|as|a|ons|ez|ont)$/.test(q.a[0])), qs.map(q => VERBS[q.m].v+':'+q.a[0]).join(', '));
+  { let ok = true; for (let k=0;k<40;k++){ if (!buildQuestions('region','plaines').every(q => VERBS[q.m].r==='plaines')) ok = false; run = {mode:'region', regionId:'plaines'}; if (!moonPool().every(q => VERBS[q.m].r==='plaines')) ok = false; run = null; } T('plaines : uniquement ses verbes (sanctuaire et Lune de sang)', ok); }
   T('familles : tête ≠ cousin possible', qs.every(q => famHead(VERBS[q.m].v)===VERBS[q.v].v));
   qs = buildQuestions('region','eldin'); T('futur eldin pièges', qs.some(q => /(ll|tt|è|ie)r/.test(q.a[0])), qs.map(q => q.a[0]).join(', '));
   // D. impératif
