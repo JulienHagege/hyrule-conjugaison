@@ -8,7 +8,14 @@
    ajoute ces épreuves au Château et à la Lune de sang de l'univers.
    ========================================================= */
 const DEPTHS = {id:'profondeurs', name:'Les Profondeurs', sub:'Accord du participe', icon:'⛏️', n:12};
-const DEPTHS_TENSES = ['pc'];
+const DEPTHS_TENSES = TENSES.filter(t => t.cmp).map(t => t.id); // tous les temps composés
+// Cadre de phrase par temps : `intro` ouvre la relative (COD avant avec « que »), `pre` et `post` entourent la proposition quand le temps
+// ne tient pas seul (passé antérieur après « quand », subjonctif après « il est possible que »). Au subjonctif, la relative suit « le seul… ».
+const COD_FRAME = {
+  pc:{intro:['Voici','Regarde']}, pqp:{intro:['Voici','Regarde']}, fa:{intro:['Demain, tu verras','Bientôt, on admirera']}, condp:{intro:['Imagine']},
+  pa:{intro:['On admira','On montra'], pre:'quand', post:', la nuit tomba'},
+  subjp:{seul:["C'est","Ce sont"], pre:'il est possible que'}, subjpqp:{seul:["C'était","C'étaient"], pre:'il était possible que'}
+};
 const hasDepths = () => DEPTHS_TENSES.includes(TENSE);
 const regOf = id => id===DEPTHS.id ? DEPTHS : REGIONS.find(r => r.id===id);
 const depthsOpen = () => hasDepths() && !!((P && P.unlockAll) || S.bossWins>=1);
@@ -89,8 +96,11 @@ function mkCod(d, type, gn, subj){
   const key = type==='que' ? (gn==='ms' ? 'que|ms' : 'que|'+gn+'|'+(aud ? 'a' : 'm')) : type==='pro' ? 'pro|'+gn : type;
   let noun = d[1].split('|')[COD_GN.indexOf(gn)]; if (type==='en') noun = noun.replace(/^les /, 'des ');
   const pron = type==='pro' ? (gn.endsWith('s') ? "l'" : 'les') : type==='en' ? 'en' : type==='coi' ? (Math.random()<.5 ? 'lui' : 'leur') : '';
+  const F = COD_FRAME[TENSE] || COD_FRAME.pc, plur = gn.endsWith('p');
+  let intro = F.intro ? F.intro[Math.floor(Math.random()*F.intro.length)] : '', show = '';
+  if (F.seul && type==='que'){ intro = F.seul[plur ? 1 : 0]; show = (plur ? 'les ' : gn==='fs' ? 'la ' : 'le ') + 'seul' + (gn[0]==='f' ? 'e' : '') + (plur ? 's' : '') + ' ' + noun.replace(/^(les |la |le |l')/, ''); }
   return {kind:'cod', v:BY_VERB[famHead(V.v)].id, m:V.id, p:subj.p, t:TENSE, s:subj.t, g:'m', n:'s', a:[aux+' '+pp], c:'',
-    cod:{type, key, gn, noun, pron, tail:d[2], intro:Math.random()<.5 ? 'Voici' : 'Regarde', base, forms:pc.ppF.slice()}};
+    cod:{type, key, gn, noun, show, pron, tail:d[2], intro, pre:F.pre||'', post:F.post||'', base, forms:pc.ppF.slice()}};
 }
 // Fabrique une épreuve pour un type de piège donné, en évitant de réutiliser les verbes de `used`
 function codFromKey(key, used){
@@ -127,10 +137,12 @@ function codReview(qs){
 function codParts(q){
   const c = q.cod, first = (q.a && q.a[0]) || '', after = c.pron || first;
   const sj = q.p===0 ? (VOWEL.test(after) ? "j'" : 'je') : q.s;
-  if (c.type==='apres') return [{k:'subj', t:cap(sj)}, {k:'blank'}, {k:'cod', t:c.noun}, {k:'tail', t:c.tail}];
-  if (c.type==='coi') return [{k:'subj', t:cap(sj)}, {k:'coi', t:c.pron}, {k:'blank'}, {k:'cod', t:c.noun}, {k:'tail', t:c.tail}];
-  if (c.type==='pro' || c.type==='en') return [{k:'cod', t:cap(c.noun)}, {k:'punct', t:','}, {k:'subj', t:sj}, {k:'pron', t:c.pron}, {k:'blank'}, {k:'tail', t:c.tail}];
-  return [{k:'intro', t:c.intro}, {k:'cod', t:c.noun}, {k:'que', t:VOWEL.test(sj) ? "qu'" : 'que'}, {k:'subj', t:sj}, {k:'blank'}, {k:'tail', t:c.tail}];
+  const pre = c.pre ? (/ que$/.test(c.pre) && VOWEL.test(sj) ? c.pre.slice(0,-1)+"'" : c.pre) : '', end = c.post ? [{k:'punct', t:c.post}] : [];
+  if (c.type==='que') return [{k:'intro', t:c.intro}, {k:'cod', t:c.show || c.noun}, {k:'que', t:VOWEL.test(sj) ? "qu'" : 'que'}, {k:'subj', t:sj}, {k:'blank'}, {k:'tail', t:c.tail}];
+  const head = c.type==='pro' || c.type==='en' ? [{k:'cod', t:cap(c.noun)}, {k:'punct', t:','}].concat(pre ? [{k:'intro', t:pre}] : []).concat([{k:'subj', t:sj}, {k:'pron', t:c.pron}])
+    : (pre ? [{k:'intro', t:cap(pre)}, {k:'subj', t:sj}] : [{k:'subj', t:cap(sj)}]).concat(c.type==='coi' ? [{k:'coi', t:c.pron}] : []);
+  const tailParts = c.type==='pro' || c.type==='en' ? [{k:'tail', t:c.tail}] : [{k:'cod', t:c.noun}, {k:'tail', t:c.tail}];
+  return head.concat([{k:'blank'}], tailParts, end);
 }
 function codJoin(parts, fn){ let out = ''; parts.forEach((p,i) => { out += fn(p); const nx = parts[i+1]; if (nx && nx.k!=='punct' && !(p.t && p.t.endsWith("'"))) out += ' '; }); return out; }
 const codIsCod = k => k==='cod' || k==='pron';
@@ -202,7 +214,7 @@ function codTapDone(q, focus){
 const exS = t => `<span class="s">${t}</span>`, exC = t => `<span class="c">${t}</span>`, exP = t => `<span class="p">${t}</span>`;
 const RULE = [
   {lvl:1, icon:'⛏️', title:'Le secret des Profondeurs', html:`<p>Ici, tu apprends un secret de grammaire : <b>l'accord du participe passé avec avoir</b>.</p><p>Bonne nouvelle pour commencer : avec <b>avoir</b>, le participe ne s'accorde <b>jamais avec le sujet</b>.</p>
-    <div class="ex">${exS('Zelda')} a ${exP('trouvé')} un rubis.</div><div class="ex">${exS('Les Gorons')} ont ${exP('trouvé')} un rubis.</div><p class="hint">« trouvé » ne bouge pas, peu importe qui trouve.</p>`},
+    <div class="ex">${exS('Zelda')} a ${exP('trouvé')} un rubis.</div><div class="ex">${exS('Les Gorons')} ont ${exP('trouvé')} un rubis.</div><p class="hint">« trouvé » ne bouge pas, peu importe qui trouve. La règle est la même à tous les temps composés : seul l'auxiliaire change (a, avait, aura, aurait…).</p>`},
   {lvl:1, icon:'🎯', title:'Trouve le COD', html:`<p>Le <b>COD</b>, c'est ce qui subit l'action. Pour le trouver, pose la question <b>qui ?</b> ou <b>quoi ?</b> après le verbe.</p>
     <div class="ex">Link a trouvé ${exC('les rubis')} dans la grotte.</div><p class="hint">Link a trouvé quoi ? → ${exC('les rubis')} : c'est le COD. « dans la grotte » dit où : ce n'est pas un COD.</p>`},
   {lvl:1, icon:'⏪', title:'Le pouvoir Rétrospective', html:`<p>Le participe a le même pouvoir que Link : il regarde <b>en arrière</b>, vers le début de la phrase.</p>

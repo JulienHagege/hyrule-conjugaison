@@ -94,7 +94,20 @@ try{
   const errLi = run.errors.length; run = null; closeMoon(); S.cod = {'que|fs|a':{w:2,r:0,s:0,t:1}};
   // Sans étoile : rien dans le château ni la lune ; autre univers : jamais
   S.regions.profondeurs.stars = 0; T('sans étoile : château intact', buildQuestions('boss','chateau').every(q => !q.cod));
-  S.regions.profondeurs.stars = 2; switchWorld('pqp', true); T('autre univers : château intact', buildQuestions('boss','chateau').every(q => !q.cod) && !card());
+  S.regions.profondeurs.stars = 2; switchWorld('futur', true); T('temps simple : château intact, pas de carte', buildQuestions('boss','chateau').every(q => !q.cod) && !card()); switchWorld('pc', true);
+  // Tous les temps composés : carte présente, formes identiques au moteur, phrases
+  for (const tid of ['pqp','fa','condp','pa','subjp','subjpqp']){
+    switchWorld(tid, true); const has = !!card(); let ok = true, bad = '';
+    S.regions.profondeurs = {stars:2, plays:1, best:10};
+    for (let k=0;k<300;k++){ const q = codFromKey(COD_KEYS[k % COD_KEYS.length]), V = VERBS[q.m], ref = conj(V, tid, q.p, {t:q.s, g:'m', n:'s'})[0], c = q.cod;
+      const want = ref.split(' ')[0]+' '+((c.type==='que'||c.type==='pro') ? c.forms[COD_PPI[c.gn]] : c.base); if (q.a[0]!==want || q.t!==tid){ ok = false; bad = q.a[0]+' / '+want; } }
+    T(tid+' : carte et formes', has && ok && DEPTHS_TENSES.includes(tid), bad);
+    out.push('TEMPS '+tid+' '+['apres','que|fs|a','que|mp|m','que|ms','pro|fs','pro|mp','coi','en'].map(k => { const q = codFromKey(k); return codSentenceHtml(q, q.a[0]).replace(/<[^>]+>/g,''); }).join(' | '));
+    delete S.regions.profondeurs;
+  }
+  switchWorld('subjp', true); S.bossWins = 1; S.codSeen = 1; S.codTuto = true; renderHome(); card().click(); T('subjonctif passé : expédition', run && run.qs.length===12 && run.qs.every(q => q.a[0].startsWith('ai') || q.a[0].startsWith('ay')), run && run.qs[0].a[0]);
+  run.moonAt = -1; const qs0 = run.qs[0]; tap('cod'); out.push('ECRAN subjp '+$('#qcard .sentence').textContent.replace(/\s+/g,' ')); submit('que '+qs0.a[0]); T('subjonctif : réponse avec « que » acceptée', run.res[0]==='ok'); $('#btn-next').click(); $('#btn-quit').click(); $('#btn-quit').click();
+  switchWorld('pc', true);
   // Fusion : S.cod voyage avec le monde
   const m = mergeRoot(NEW_ROOT(), JSON.parse(JSON.stringify(ROOT))); T('fusion conserve les Profondeurs', !!m.profiles[P.id].worlds.pc.cod && m.profiles[P.id].worlds.pc.codTuto===true);
   T('sans erreur JS', !document.body.getAttribute('data-err'), document.body.getAttribute('data-err')||'');
