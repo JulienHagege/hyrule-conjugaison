@@ -302,7 +302,8 @@ rep("c:q.c, given: c || '(trop lent)', moon:true});", "c:q.c, cod:q.cod, given: 
 rep("run.errors.map(e => { const V=VERBS[e.m]; const q=e; return `<li>", "run.errors.map(e => { const V=VERBS[e.m]; const q=e; if (e.cod) return codErrLi(e); return `<li>")
 rep("  $('#r-review').hidden = !weakList().length && !consolidateList().length;", "  $('#r-review').hidden = !weakList().length && !consolidateList().length && !(hasDepths() && weakCod().length);")
 # Fin de partie : annonces (passage ouvert après le Château, épreuves ajoutées après une étoile)
-rep("    S.regions[run.regionId] = st;", "    if (run.regionId===DEPTHS.id && stars>=1 && !S.codJoined){ S.codJoined = true; setTimeout(() => toast('⛏️ Les épreuves des Profondeurs rejoignent le Château et la Lune de sang.'), 2200); }\n    S.regions[run.regionId] = st;")
+rep("    const st = S.regions[run.regionId] || {stars:0,plays:0,best:0};", "    const lv0 = hasDepths() ? codLevel() : 0;\n    const st = S.regions[run.regionId] || {stars:0,plays:0,best:0};")
+rep("    S.regions[run.regionId] = st;", "    S.regions[run.regionId] = st;\n    if (run.regionId===DEPTHS.id) codLevelUp(lv0);")
 rep("S.bossWins = (S.bossWins||0)+1; }", "S.bossWins = (S.bossWins||0)+1; if (hasDepths() && S.bossWins===1) setTimeout(() => toast('⛏️ Un gouffre s\\'ouvre sous le château : les Profondeurs t\\'attendent en bas de la carte.'), 3200); }")
 # Lune de sang
 rep("function moonPool(){\n", "function moonPool(){\n  if (run.mode==='region' && run.regionId===DEPTHS.id) return codQs(MOON_N);\n  const ck = codOn() ? 1+Math.floor(Math.random()*2) : 0;\n")

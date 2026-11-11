@@ -38,6 +38,35 @@ try{
   // Fin de partie
   let g = 0; while (run && screen==='game' && g<30){ const q = run.qs[run.i]; if (run.phase==='ask'){ tap('cod'); submit(q.a[0]); } if (run.phase==='fb') next(); g++; }
   T('expédition terminée, 2 étoiles', screen==='result' && S.regions.profondeurs && S.regions.profondeurs.stars===2 && codOn(), JSON.stringify(S.regions.profondeurs)+' '+$('#r-errs').textContent.slice(0,160));
+  // Paliers : pronoms après une étoile, pièges après deux
+  const typesOf = n => { const set = new Set(); for (let k=0;k<n;k++) codRun(12).forEach(q => set.add(q.cod.type)); return [...set].sort().join(','); };
+  const keep = S.regions.profondeurs.stars;
+  S.regions.profondeurs.stars = 0; T('palier 1 : apres et que', typesOf(30)==='apres,que' && codLevel()===1 && !codOn(), typesOf(30));
+  S.regions.profondeurs.stars = 1; T('palier 2 : pronoms', typesOf(40)==='apres,pro,que' && codLevel()===2, typesOf(40));
+  S.regions.profondeurs.stars = 2; T('palier 3 : pièges', typesOf(40)==='apres,coi,en,pro,que' && codLevel()===3, typesOf(40));
+  const show1 = k => { const q = codFromKey(k); return codSentenceHtml(q, q.a[0]).replace(/<[^>]+>/g,'')+' ['+codNote(q).slice(0,70)+']'; };
+  out.push('NOUVELLES '+['pro|fs','pro|ms','pro|fp','pro|mp','coi','coi','en','en','pro|fs','coi','en'].map(show1).join(' | '));
+  { let ok = true, bad = ''; for (let k=0;k<400;k++){ const key = COD_KEYS[k % COD_KEYS.length], q = codFromKey(key), c = q.cod, f = q.a[0].split(' ')[1];
+      const want = (c.type==='que' || c.type==='pro') ? c.forms[COD_PPI[c.gn]] : c.base; if (f!==want || c.key!==key || (c.type==='coi' && !COD_DATA.find(d => d[0]===VERBS[q.m].v)[3]) || (c.type==='en' && !c.noun.startsWith('des '))){ ok = false; bad = key+' '+q.a[0]; } }
+    T('formes attendues pour chaque type', ok, bad); }
+  // Écran : pronom, piège lui, piège en
+  S.regions.profondeurs.stars = 2; S.codSeen = 3; startRun('region','profondeurs'); run.moonAt = -1;
+  const putQ = q => { run.qs[run.i] = q; renderGame(); renderQuestion(); return q; };
+  let qx = putQ(mkCod(COD_DATA[14], 'pro', 'fs', {t:'je', p:0})); out.push('ECRAN pro '+$('#qcard .sentence').textContent.replace(/\s+/g,' '));
+  document.querySelector('#qcard .tap[data-k="pron"]').click(); T('pronom touché = COD', qx.tapped && !$('#form-answer').hidden && $('#cod-msg').textContent.includes('remplace'), $('#cod-msg').textContent);
+  submit('ai trouvée'); T('pronom : accord accepté', run.res[run.i]==='ok', qx.a[0]); next();
+  qx = putQ(mkCod(COD_DATA[12], 'coi', 'fp', {t:'Link', p:2})); out.push('ECRAN coi '+$('#qcard .sentence').textContent.replace(/\s+/g,' '));
+  document.querySelector('#qcard .tap[data-k="coi"]').click(); T('lui touché : COI expliqué', !qx.tapped && $('#cod-msg').textContent.includes('COI'), $('#cod-msg').textContent);
+  tap('cod'); submit('a offertes'); T('piège lui : accord refusé', run.phase==='retype' && S.cod.coi.w===1 && $('#fb .sage').textContent.includes('quelqu'), $('#fb .sage').textContent.slice(0,150)); $('#inp-retype').value = qx.a[0]; retypeCheck();
+  qx = putQ(mkCod(COD_DATA[14], 'en', 'fp', {t:'je', p:0})); out.push('ECRAN en '+$('#qcard .sentence').textContent.replace(/\s+/g,' '));
+  tap('pron'); submit("ai trouvé"); T('piège en : pas d\'accord', run.res[run.i]==='ok' && qx.a[0]==='ai trouvé', $('#fb .sage').textContent.slice(0,120));
+  $('#btn-quit').click(); $('#btn-quit').click(); T('abandon', !run);
+  // Explication par palier à l'entrée
+  S.regions.profondeurs.stars = 1; S.codSeen = 1; renderHome(); T('badge Nouveau au palier 2', !!card().querySelector('.new')); card().click();
+  T('palier 2 : une seule étape, les pronoms', !$('#rule').hidden && $('#rule-title').textContent.includes('Plus profond') && $('#rule-next').textContent.includes('Descendre'), $('#rule-title').textContent);
+  $('#rule-next').click(); T('palier 2 vu, partie lancée', S.codSeen===2 && run && run.regionId==='profondeurs'); $('#btn-quit').click(); $('#btn-quit').click();
+  $('#btn-rule'); openRule('card'); T('fiche : pronoms sans pièges', $('#rule-body').textContent.includes("l', les") && !$('#rule-body').textContent.includes('leur')); closeRule();
+  S.regions.profondeurs.stars = keep; S.codSeen = 3; S.cod = {}; S.cod[q1.cod.key] = {w:1,r:0,s:0,t:1};
   // Château et Lune de sang
   let nb = 0; for (let k=0;k<20;k++){ const qs = buildQuestions('boss','chateau'); if (qs.length!==25) nb = -999; nb += qs.filter(q => q.cod).length; } T('château : 5 épreuves d\'accord sur 25', nb===100, nb);
   run = {mode:'region', regionId:'plaines'}; let nm = 0, tot = 0; for (let k=0;k<40;k++){ const qs = moonPool(); tot += qs.length; nm += qs.filter(q => q.cod).length; } T('lune : 1 à 2 épreuves d\'accord sur 5', tot===200 && nm>=40 && nm<=80, nm+'/'+tot);

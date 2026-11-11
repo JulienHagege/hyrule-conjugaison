@@ -16,7 +16,7 @@ body.depths-mode .topbar .where{color:#ffb070}
 .sentence.cod .tap.miss{animation:shake .4s; color:var(--muted); border-bottom-color:rgba(255,115,87,.6)}
 .sentence.cod.done .tap{cursor:default; border-bottom-color:transparent; background:none}
 .sentence.cod.done .tap.hit{background:rgba(180,140,255,.2); border-bottom:3px solid var(--violet); color:#e4d8ff}
-.sentence.cod.done .tap.hit::after{content:"COD"; font:900 11px var(--font-body); letter-spacing:.08em; color:var(--violet); vertical-align:super; margin-left:4px}
+.sentence.cod.done .tap.hit.lab::after{content:"COD"; font:900 11px var(--font-body); letter-spacing:.08em; color:var(--violet); vertical-align:super; margin-left:4px}
 #cod-step{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:0 0 14px; padding:10px 12px; border-radius:12px; background:rgba(106,208,255,.08); border:1px dashed rgba(106,208,255,.45)}
 #cod-msg{margin:0; flex:1; min-width:200px; font-size:15px; color:#dbe9f6}
 #cod-msg .cod-q{display:inline-block; color:var(--gold); font-weight:900; font-style:italic}
