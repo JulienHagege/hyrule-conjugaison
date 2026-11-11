@@ -102,7 +102,7 @@ rep("  const corePool = []; VERBS.filter(V => V.core).forEach(V => persons(V).fo
 rep("  // Deux épreuves par sanctuaire viennent des verbes essentiels (être, avoir, aller, faire, dire...), quelle que soit la région.",
     "  // Jusqu'à deux épreuves par sanctuaire rappellent des verbes essentiels déjà rencontrés (ceux des régions précédentes). Aucun verbe d'une région pas encore atteinte.")
 rep("function moonPool(){", "const regIdx = id => REGIONS.findIndex(r => r.id===id);\nfunction moonPool(){")
-# (Lune de sang d'un sanctuaire : seulement la région en cours et les précédentes, voir le rep de moonPool plus bas ; la révision garde tous les verbes.)
+# (Lune de sang : seulement les régions débloquées de l'univers en cours, voir le rep de moonPool plus bas.)
 rep("""  const q = run.qs[run.i], V = VERBS[q.v];
   run.phase = 'ask';
   $('#q-num').textContent = `Épreuve ${run.i+1} / ${run.qs.length}`;
@@ -156,7 +156,7 @@ rep("""re.innerHTML = `<h3>À retravailler (le Sage s'en souvient)</h3><ul>${run
     """re.innerHTML = `<h3>À retravailler (le Sage s'en souvient)</h3><ul>${run.errors.map(e => { const V=VERBS[e.m]; const q=e; return `<li>${TENSE==='imperatif' ? '('+PERSON_LABEL[e.p].replace(' / ','/')+') ' : esc(subjectText(q))}<b>${esc(e.a[0])}</b>""")
 
 # ---------- Lune de sang
-rep("  const pool = []; VERBS.forEach(V => persons(V).forEach(p => pool.push({v:V.id,p})));\n  return sample(pool, MOON_N,", "  const lim = run.mode==='region' ? regIdx(run.regionId) : 99;\n  const pool = []; HEADS.filter(V => existsAt(V, TENSE) && regIdx(V.r)<=lim).forEach(V => persons(V).forEach(p => pool.push({v:V.id,p})));\n  return sample(pool, MOON_N,")
+rep("  const pool = []; VERBS.forEach(V => persons(V).forEach(p => pool.push({v:V.id,p})));\n  return sample(pool, MOON_N,", "  // Lune de sang : seulement les régions déjà débloquées dans l'univers (le temps) en cours, plus la région jouée.\n  const open = new Set(REGIONS.filter((R,i) => !R.boss && regionUnlocked(i)).map(R => R.id)); if (run.regionId) open.add(run.regionId);\n  const pool = []; HEADS.filter(V => existsAt(V, TENSE) && open.has(V.r)).forEach(V => persons(V).forEach(p => pool.push({v:V.id,p})));\n  return sample(pool, MOON_N,")
 i0 = src.index('function distractors(V,p){'); i1 = src.index('function startMoon(){')
 src = src[:i0] + rd('v2_distractors.js').strip() + '\n' + src[i1:]
 rep("""  const q = moon.qs[moon.i], V = VERBS[q.v], correct = V.alts[q.p][0];

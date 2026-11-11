@@ -24,7 +24,11 @@ try{
   // C. changement d'univers
   switchWorld('futur'); T('switch futur', TENSE==='futur' && S.rupees===0 && P.worlds.present.rupees===1234 && $('#h-tense').textContent==='Futur simple' && screen==='home');
   let qs = buildQuestions('region','plaines'); T('questions futur plaines', qs.length===10 && qs.every(q => q.t==='futur' && q.a.length && /r(ai|as|a|ons|ez|ont)$/.test(q.a[0])), qs.map(q => VERBS[q.m].v+':'+q.a[0]).join(', '));
-  { let ok = true; for (let k=0;k<40;k++){ if (!buildQuestions('region','plaines').every(q => VERBS[q.m].r==='plaines')) ok = false; run = {mode:'region', regionId:'plaines'}; if (!moonPool().every(q => VERBS[q.m].r==='plaines')) ok = false; run = null; } T('plaines : uniquement ses verbes (sanctuaire et Lune de sang)', ok); }
+  { let ok = true; const keep0 = S.regions, ua0 = P.unlockAll; P.unlockAll = false; S.regions = {}; for (let k=0;k<40;k++){ if (!buildQuestions('region','plaines').every(q => VERBS[q.m].r==='plaines')) ok = false; run = {mode:'region', regionId:'plaines'}; if (!moonPool().every(q => VERBS[q.m].r==='plaines')) ok = false; run = null; } S.regions = keep0; P.unlockAll = ua0; T('plaines : uniquement ses verbes (sanctuaire et Lune de sang)', ok); }
+  { const keep = S.regions, ua = P.unlockAll; P.unlockAll = false; const mr = () => { const set = new Set(); for (let k=0;k<60;k++) moonPool().forEach(q => set.add(VERBS[q.m].r)); return [...set].sort().join(','); };
+    S.regions = {plaines:{stars:1,plays:1,best:8}, foret:{stars:1,plays:1,best:8}}; run = {mode:'region', regionId:'plaines'}; const a = mr(); run = {mode:'review'}; const b = mr();
+    S.regions = {}; run = {mode:'review'}; const c = mr(); run = null; S.regions = keep; P.unlockAll = ua;
+    T('lune : régions débloquées du temps en cours', a==='eldin,foret,plaines' && b===a && c==='plaines', a+' / '+b+' / '+c); }
   T('familles : tête ≠ cousin possible', qs.every(q => famHead(VERBS[q.m].v)===VERBS[q.v].v));
   qs = buildQuestions('region','eldin'); T('futur eldin pièges', qs.some(q => /(ll|tt|è|ie)r/.test(q.a[0])), qs.map(q => q.a[0]).join(', '));
   // D. impératif

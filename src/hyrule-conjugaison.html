@@ -1834,8 +1834,9 @@ function scheduleMoon(){
 }
 const regIdx = id => REGIONS.findIndex(r => r.id===id);
 function moonPool(){
-  const lim = run.mode==='region' ? regIdx(run.regionId) : 99;
-  const pool = []; HEADS.filter(V => existsAt(V, TENSE) && regIdx(V.r)<=lim).forEach(V => persons(V).forEach(p => pool.push({v:V.id,p})));
+  // Lune de sang : seulement les régions déjà débloquées dans l'univers (le temps) en cours, plus la région jouée.
+  const open = new Set(REGIONS.filter((R,i) => !R.boss && regionUnlocked(i)).map(R => R.id)); if (run.regionId) open.add(run.regionId);
+  const pool = []; HEADS.filter(V => existsAt(V, TENSE) && open.has(V.r)).forEach(V => persons(V).forEach(p => pool.push({v:V.id,p})));
   return sample(pool, MOON_N, q => { const V = VERBS[q.v]; let w = weightOf(q.v,q.p); if (V.r===run.regionId) w *= 2.5; if (V.r==='plaines'||V.r==='foret') w *= .3; return w; }).map(q => mkQ(q.v,q.p));
 }
 // Mauvaises réponses plausibles pour la Lune de sang : fautes typiques sur la forme juste, autres personnes, et aux temps composés

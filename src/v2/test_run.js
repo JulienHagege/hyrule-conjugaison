@@ -17,8 +17,9 @@ try{
   T('erreur comptée', run.phase==='retype' && item(q0.v,q0.p).w===1 && run.hearts===maxHearts()-1 && $('#fb .sage').textContent.includes('Imparfait'), $('#fb .sage').textContent.slice(0,100));
   $('#inp-retype').value = q0.a[0]; retypeCheck(); T('recopie acceptée', run.i===1 && run.phase==='ask');
   // réponse presque juste (accent)
-  const q1 = run.qs[1]; $('#inp').value = deacc(q1.a[0]); $('#form-answer').dispatchEvent(new Event('submit', {cancelable:true}));
-  T('presque (accent)', run.res[1]==='mid' && $('#fb .big').textContent.includes('accent'), $('#fb .big').textContent);
+  const q1 = run.qs[1];
+  if (deacc(q1.a[0])!==q1.a[0]){ $('#inp').value = deacc(q1.a[0]); $('#form-answer').dispatchEvent(new Event('submit', {cancelable:true}));
+    T('presque (accent)', run.res[1]==='mid' && $('#fb .big').textContent.includes('accent'), $('#fb .big').textContent); } else out.push('SKIP presque (accent) : forme sans accent tirée ('+q1.a[0]+')');
   $('#btn-quit').click(); $('#btn-quit').click(); T('abandon', screen==='home' && !run);
   T('révision disponible imparfait', weakList().length>=1 && !$('#btn-review').disabled);
   startRun('review'); T('révision 15', run.qs.length===15 && run.qs.every(q => q.t==='imparfait' && q.a.length), run.qs.map(q => q.a[0]).join(', '));
