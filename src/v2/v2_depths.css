@@ -1,0 +1,37 @@
+/* ---------- Les Profondeurs : accord du participe ---------- */
+.region.depths{grid-column:1/-1; display:grid; grid-template-columns:auto minmax(0,1fr); column-gap:14px; row-gap:6px; align-items:center; height:auto; border-color:rgba(106,208,255,.45); background-position:center 60%}
+.region.depths .med{grid-row:1 / span 5; width:64px; height:64px; font-size:32px}
+.region.depths:hover:not(.locked){border-color:#6ad0ff; box-shadow:0 0 0 1px rgba(106,208,255,.4), 0 16px 34px rgba(0,0,0,.5), 0 0 34px rgba(255,150,70,.22)}
+.region[data-r="profondeurs"] .med{background:radial-gradient(circle at 35% 30%,#3a2a6a,#05040f); border-color:#ff9a4a; box-shadow:0 0 18px rgba(255,154,74,.55), inset 0 0 12px rgba(106,208,255,.35)}
+.region.depths h3{font-size:17px; color:#ffd9b0}
+.region.depths .mast{max-width:340px}
+.region.depths .need{margin-top:0; white-space:normal}
+body.depths-mode{background-color:#05060f}
+body.depths-mode .qcard{border-color:rgba(106,208,255,.45); background:linear-gradient(180deg,rgba(24,26,58,.96),rgba(10,12,30,.96)); box-shadow:0 12px 32px rgba(0,0,0,.6), 0 0 40px rgba(255,150,70,.1)}
+body.depths-mode .topbar .where{color:#ffb070}
+.sentence.cod{display:block; text-align:center; line-height:1.6}
+.sentence.cod .subj{color:var(--fg); text-shadow:none}
+.sentence.cod .tap{border-bottom:3px dashed rgba(255,255,255,.4); border-radius:6px; padding:0 3px; cursor:pointer; transition:background .15s, color .15s}
+.sentence.cod .tap:hover{background:rgba(255,255,255,.08)}
+.sentence.cod .tap.miss{animation:shake .4s; color:var(--muted); border-bottom-color:rgba(255,115,87,.6)}
+.sentence.cod.done .tap{cursor:default; border-bottom-color:transparent; background:none}
+.sentence.cod.done .tap.hit{background:rgba(180,140,255,.2); border-bottom:3px solid var(--violet); color:#e4d8ff}
+.sentence.cod.done .tap.hit::after{content:"COD"; font:900 11px var(--font-body); letter-spacing:.08em; color:var(--violet); vertical-align:super; margin-left:4px}
+#cod-step{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:0 0 14px; padding:10px 12px; border-radius:12px; background:rgba(106,208,255,.08); border:1px dashed rgba(106,208,255,.45)}
+#cod-msg{margin:0; flex:1; min-width:200px; font-size:15px; color:#dbe9f6}
+#cod-msg .cod-q{display:inline-block; color:var(--gold); font-weight:900; font-style:italic}
+#btn-rule{padding:7px 12px; font-size:14px; white-space:nowrap}
+.codu{text-decoration:none; border-bottom:3px dotted var(--violet); color:#e4d8ff}
+.fb .right .codu{font-weight:900}
+.rule-card{width:min(520px,100%)!important; text-align:left!important; max-height:calc(100% - 8px); overflow:auto; border-color:rgba(106,208,255,.5)}
+.rule-head{display:flex; align-items:center; gap:10px; margin-bottom:8px}
+.rule-head span{font-size:30px; line-height:1}
+.rule-head h2{font-size:21px; color:#ffb070; margin:0}
+#rule-body p{margin:0 0 8px; color:var(--fg); font-size:15.5px; line-height:1.45}
+#rule-body p.hint{color:var(--muted); font-size:14px; margin-top:-2px}
+#rule-body .ex{margin:6px 0; padding:8px 12px; border-radius:10px; background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.08); font-weight:800; font-size:17px}
+#rule-body .ex .s, #rule-body .hint .s{color:var(--gold)}
+#rule-body .c{color:#e4d8ff; border-bottom:3px dotted var(--violet)}
+#rule-body .p{color:var(--zonai); border-bottom:3px solid var(--zonai)}
+.rule-card .tuto-actions{margin-top:10px}
+.rule-card .tuto-skip{display:block; margin:10px auto 0}

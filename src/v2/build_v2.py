@@ -4,6 +4,7 @@ import re, pathlib, sys
 H = pathlib.Path(__file__).parent
 src = (H/'hyrule-conjugaison.v29.html').read_text(encoding='utf-8')
 rd = lambda n: (H/n).read_text(encoding='utf-8')
+IMGDIR = H.parent/'img'  # fonds PixelLab 400×224
 NB = ' '
 def fr(x): return re.sub(r' ([?!])(?=\S|$)', lambda m: NB+m.group(1), x)
 def rep(a, b, count=1):
@@ -253,10 +254,71 @@ rep("""      ${unlocked ? '' : `<div class="need">${R.boss ? 'Gagne une étoile 
 rep("  chateau:{root:146.8,", rd('v2_themes.js').strip() + '\n  chateau:{root:146.8,')
 
 
-# ---------- Fonds d'accueil par univers (PixelLab 400×224, sources dans img_v2/)
+# ---------- Fonds d'accueil par univers (PixelLab 400×224, sources dans src/img/)
 import base64
-imgs = ''.join(f'  home_{k}:"data:image/png;base64,{base64.b64encode((H/"img_v2"/f"home_{k}.png").read_bytes()).decode()}",\n' for k in ['present','futur','imparfait','pc','imperatif','ps','pqp','fa','cond','subj','subjp','condp','pa','subji','subjpqp'])
+imgs = ''.join(f'  home_{k}:"data:image/png;base64,{base64.b64encode((IMGDIR/f"home_{k}.png").read_bytes()).decode()}",\n' for k in ['present','futur','imparfait','pc','imperatif','ps','pqp','fa','cond','subj','subjp','condp','pa','subji','subjpqp'])
 rep('const IMG = {\n', 'const IMG = {\n' + imgs)
 
+
+# ---------- Les Profondeurs : accord du participe passé avec avoir (région bonus sous le Château, voir v2_depths.js)
+rep('@media (prefers-reduced-motion:reduce){', rd('v2_depths.css') + '\n@media (prefers-reduced-motion:reduce){')
+rep('<div class="verbline">Verbe : <b id="q-inf"></b></div>', '<div class="verbline">Verbe : <b id="q-inf"></b></div>\n    <div id="cod-step" hidden><p id="cod-msg"></p><button type="button" class="btn ghost" id="btn-rule">📜 La règle</button></div>')
+rep('<div class="modal" id="modal-name" hidden>', """<div class="modal" id="rule" hidden>
+  <div class="card rule-card">
+    <div class="rule-head"><span id="rule-icon">📜</span><h2 id="rule-title"></h2></div>
+    <div id="rule-body"></div>
+    <div class="tuto-dots" id="rule-dots"></div>
+    <div class="tuto-actions"><button class="btn ghost" id="rule-prev" hidden>Précédent</button><button class="btn ghost" id="rule-more" hidden>Revoir l'explication</button><button class="btn" id="rule-next">Suivant</button></div>
+    <button type="button" class="tuto-skip" id="rule-skip">Passer l'explication</button>
+  </div>
+</div>
+<div class="modal" id="modal-name" hidden>""")
+rep('/* =========================================================\n   ÉVÉNEMENTS', rd('v2_depths.js').strip() + '\n\n/* =========================================================\n   ÉVÉNEMENTS')
+# Décor, particules (feux follets bleus et braises de racine lumineuse) et musique (nappe grave, notes rares, long écho)
+rep("const SCENE_FX = {\n", "const SCENE_FX = {\n  profondeurs:{cols:['90,200,255','255,160,70'], vx:0, vy:-.3, sway:1.1},\n")
+rep("  chateau:{root:146.8,", "  profondeurs:{root:110, scale:[0,1,3,6,7,8,12,13,15], bpm:42, sub:1, density:.34, inst:'sine', dur:3.4, melVol:.05, melF:1100, pad:[0,6,12], padType:'triangle', padVol:0.08, padF:260, delay:.7, fb:.6, pulse:{every:4, f:41, vol:.13, dur:.5}},\n  chateau:{root:146.8,")
+rep('const IMG = {\n', 'const IMG = {\n  profondeurs:"data:image/png;base64,' + base64.b64encode((IMGDIR/'profondeurs.png').read_bytes()).decode() + '",\n')
+# Carte, écran de jeu, lancement
+rep("    map.appendChild(b);\n  });", "    map.appendChild(b);\n  });\n  depthsCard(map);")
+rep("  const weak = weakList();\n  $('#chip-review')", "  const weak = weakList().concat(hasDepths() ? weakCod() : []);\n  $('#chip-review')")
+rep("document.body.classList.toggle('boss-mode', boss);", "document.body.classList.toggle('boss-mode', boss); document.body.classList.toggle('depths-mode', id==='game' && !!run && run.regionId===DEPTHS.id);")
+rep("REGIONS.find(r => r.id===run.regionId)", "regOf(run.regionId)", 2)
+rep("function buildQuestions(mode, regionId){\n", "function buildQuestions(mode, regionId){\n  if (mode==='region' && regionId===DEPTHS.id) return codRun(DEPTHS.n);\n")
+rep("    return qs.sort(() => Math.random()-.5);\n  }", "    return codReview(qs).sort(() => Math.random()-.5);\n  }")
+# Château : cinq épreuves d'accord une fois les Profondeurs gagnées
+rep("  if (mode==='boss'){\n", "  if (mode==='boss'){\n    const codN = codOn() ? 5 : 0;\n")
+rep("const rq = sample(pool.filter(q => !used.has(itemKey(q.v,q.p))), R.n - wq.length, q => {", "const rq = sample(pool.filter(q => !used.has(itemKey(q.v,q.p))), R.n - wq.length - codN, q => {")
+rep("    return [...wq, ...rq].sort(() => Math.random()-.5).map(q => mkQ(q.v,q.p));", "    return [...[...wq, ...rq].map(q => mkQ(q.v,q.p)), ...codQs(codN)].sort(() => Math.random()-.5);")
+# Épreuve : premier geste (toucher le COD), statistiques par type de piège, correction
+rep("  setTimeout(()=>inp.focus(), 50);\n}", "  setTimeout(()=>inp.focus(), 50);\n  codAsk();\n}")
+rep("const it = item(q.v,q.p); it.t = Date.now();", "const it = itemOf(q); it.t = Date.now();", 2)
+rep("(run.regionId==='ciel' ? 20 : 10)", "(run.regionId==='ciel' || run.regionId===DEPTHS.id ? 20 : 10)")
+rep("function sentenceHtml(q, form){ return ", "function sentenceHtml(q, form){ if (q.cod) return codSentenceHtml(q, form); return ")
+a = "${conjTable(V, q.p)}"; assert src.count(a)==2
+src = src.replace(a, "${q.cod ? codWhyHtml(q) : conjTable(V, q.p)}", 1).replace(a, "${q.cod ? '' : conjTable(V, q.p)}", 1)
+rep("${esc(tenseNote(V, TENSE))}", "${esc(q.cod ? codNote(q) : tenseNote(V, TENSE))}", 2)
+rep("c:q.c, given:raw.trim()});", "c:q.c, cod:q.cod, given:raw.trim()});")
+rep("c:q.c, given: c || '(trop lent)', moon:true});", "c:q.c, cod:q.cod, given: c || '(trop lent)', moon:true});")
+rep("run.errors.map(e => { const V=VERBS[e.m]; const q=e; return `<li>", "run.errors.map(e => { const V=VERBS[e.m]; const q=e; if (e.cod) return codErrLi(e); return `<li>")
+rep("  $('#r-review').hidden = !weakList().length && !consolidateList().length;", "  $('#r-review').hidden = !weakList().length && !consolidateList().length && !(hasDepths() && weakCod().length);")
+# Fin de partie : annonces (passage ouvert après le Château, épreuves ajoutées après une étoile)
+rep("    S.regions[run.regionId] = st;", "    if (run.regionId===DEPTHS.id && stars>=1 && !S.codJoined){ S.codJoined = true; setTimeout(() => toast('⛏️ Les épreuves des Profondeurs rejoignent le Château et la Lune de sang.'), 2200); }\n    S.regions[run.regionId] = st;")
+rep("S.bossWins = (S.bossWins||0)+1; }", "S.bossWins = (S.bossWins||0)+1; if (hasDepths() && S.bossWins===1) setTimeout(() => toast('⛏️ Un gouffre s\\'ouvre sous le château : les Profondeurs t\\'attendent en bas de la carte.'), 3200); }")
+# Lune de sang
+rep("function moonPool(){\n", "function moonPool(){\n  if (run.mode==='region' && run.regionId===DEPTHS.id) return codQs(MOON_N);\n  const ck = codOn() ? 1+Math.floor(Math.random()*2) : 0;\n")
+rep("  return sample(pool, MOON_N, q => {", "  return sample(pool, MOON_N-ck, q => {")
+rep("return w; }).map(q => mkQ(q.v,q.p));\n}\n// Mauvaises réponses", "return w; }).map(q => mkQ(q.v,q.p)).concat(codQs(ck)).sort(() => Math.random()-.5);\n}\n// Mauvaises réponses")
+rep("function distractors(q){\n", "function distractors(q){\n  if (q.cod) return codDistractors(q);\n")
+a = """<div class="sentence"><span class="subj">${esc(subjDisp(q))}</span><span class="blank">&nbsp;</span><span class="rest">${esc(q.c||'')}${endMark()}</span></div>"""
+assert src.count(a)==1
+src = src.replace(a, "${q.cod ? codMoonHtml(q) : `" + a + "`}")
+# Les épreuves d'accord demandent de lire toute la phrase : moitié de temps en plus
+rep("const r = 1-(performance.now()-moon.t0)/MOON_T;", "const r = 1-(performance.now()-moon.t0)/(q.cod ? MOON_T*1.5 : MOON_T);")
+# Carnet et hub
+rep("  $('#b-unlock').textContent = P.unlockAll ?", "  codBook();\n  $('#b-unlock').textContent = P.unlockAll ?")
+rep("  const stars = REGIONS.reduce((n,R) => n + ((w.regions[R.id]||{}).stars||0), 0);\n  return {stars, max: REGIONS.length*3,", "  const stars = REGIONS.reduce((n,R) => n + ((w.regions[R.id]||{}).stars||0), 0) + ((w.regions.profondeurs||{}).stars||0);\n  return {stars, max: REGIONS.length*3 + (w.regions.profondeurs ? 3 : 0),")
+
+# Deux copies : src/ (source de l'artifact, lu par build.py) et src/v2/ (lu par mk_test.py, hors dépôt)
+(H.parent/'hyrule-conjugaison.html').write_text(src, encoding='utf-8')
 (H/'hyrule-conjugaison.html').write_text(src, encoding='utf-8')
 print('écrit', len(src), 'octets')
