@@ -53,3 +53,8 @@ Ne jamais publier le source brut hors claude.ai : sans l'enveloppe, les écrans 
 - Lune de sang : une partie sur 1 ou 2 (jamais contre Ganondorf), se lève sur 3 épreuves, 5 QCM à 6,6 s, +30/20/10 rubis selon la vitesse, faux ou lent = un cœur perdu, sans faute +50 et fanfare. Bouton test dans le Carnet (zone parents), sans impact sur les stats.
 - Verbe maîtrisé (★) = réussi une fois sans erreur en attente ; or (★★) = 4 réussites à 90 %.
 - Style : jamais de tiret cadratin, typo FR (espace insécable avant ! et ?), registre casual.
+
+## Orthographes multiples (2026-11-22)
+
+- Règle de Julien : toutes les orthographes du Bescherelle sont justes. Le moteur les donne déjà en alternatives (`q.a`) : asseoir ie/oi à tous les temps, -ayer, è de 1990 (épeler, étinceler, feuilleter ; futur de préférer, répéter…), circonflexe facultatif (il connait), je peux/puis, veuille/veux, apparaître être/avoir. Ajout : futur et conditionnel en -aître sans accent (`pieces`, connaitrai).
+- Affichage (`engine.js`, fin) : `variantWhy` (raison par cas), `variantsHtml` (après une faute : encadré « Deux orthographes justes », formes, raison, « Écris-en une seule »), `variantsOkHtml` (après une bonne réponse : « On peut aussi écrire »). `retypeBlock(correct, alts)` change la consigne ; `retypeCheck` refuse les deux formes tapées ensemble avec un toast. Lune de sang : « C'était « A » ou « B » ». Patches en fin de `build_v2.py`, styles `.variants` dans `v2.css`, test `test_variants.js`.
