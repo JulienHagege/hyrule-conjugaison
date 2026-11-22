@@ -319,6 +319,19 @@ rep("const r = 1-(performance.now()-moon.t0)/MOON_T;", "const r = 1-(performance
 rep("  $('#b-unlock').textContent = P.unlockAll ?", "  codBook();\n  $('#b-unlock').textContent = P.unlockAll ?")
 rep("  const stars = REGIONS.reduce((n,R) => n + ((w.regions[R.id]||{}).stars||0), 0);\n  return {stars, max: REGIONS.length*3,", "  const stars = REGIONS.reduce((n,R) => n + ((w.regions[R.id]||{}).stars||0), 0) + ((w.regions.profondeurs||{}).stars||0);\n  return {stars, max: REGIONS.length*3 + (w.regions.profondeurs ? 3 : 0),")
 
+# ---------- Plusieurs orthographes justes (Bescherelle) : explication après une faute, consigne « une seule »
+rep("""${alts.length>1?` <span style="color:var(--muted);font-size:15px">(ou ${esc(alts.slice(1).join(', '))})</span>`:''}</div>""", """</div>${variantsHtml(q)}""", count=2)
+rep("""<div class="right">${sentenceHtml(q,a)}</div>""", """<div class="right">${sentenceHtml(q,a)}</div>${variantsOkHtml(q,a)}""")
+assert src.count('${retypeBlock(correct)}')==2
+src = src.replace('${retypeBlock(correct)}', '${retypeBlock(correct, alts)}')
+rep("""function retypeBlock(correct){
+  return `<form class="retype" id="form-retype"><label for="inp-retype">Recopie la bonne réponse pour continuer :</label>""", """function retypeBlock(correct, alts){
+  const lbl = alts && alts.length>1 ? 'Écris une des orthographes justes pour continuer :' : 'Recopie la bonne réponse pour continuer :';
+  return `<form class="retype" id="form-retype"><label for="inp-retype">${lbl}</label>""")
+rep("""  if (q.a.includes(a)){ SFX.ok(); next(); }""", """  if (q.a.includes(a)){ SFX.ok(); next(); }
+  else if (q.a.length>1 && q.a.filter(f => a.includes(f)).length>1){ toast('✦ Une seule orthographe suffit : choisis-en une.'); ri.select(); }""")
+rep("""'C\\'était « '+correct+' ». Tu perds un cœur.';""", """'C\\'était « '+alts.join(' » ou « ')+' ». Tu perds un cœur.';""")
+
 # Deux copies : src/ (source de l'artifact, lu par build.py) et src/v2/ (lu par mk_test.py, hors dépôt)
 (H.parent/'hyrule-conjugaison.html').write_text(src, encoding='utf-8')
 (H/'hyrule-conjugaison.html').write_text(src, encoding='utf-8')

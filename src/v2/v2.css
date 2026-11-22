@@ -93,3 +93,12 @@ label.btn{cursor:pointer}
 .mock-input .caret{display:inline-block; width:2px; height:1em; background:var(--zonai); vertical-align:-2px; margin-left:2px; animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 .mock-hearts{justify-content:center; margin-top:10px}
+/* Plusieurs orthographes justes */
+.variants{margin-top:10px; padding:10px 12px; border-radius:12px; background:rgba(93,227,192,.09); border:1px solid rgba(93,227,192,.45); color:#e8fff8; font-size:15px; line-height:1.45}
+.variants .vt{font-weight:700; color:#5de3c0; margin-bottom:4px}
+.variants .vl b{color:#fff; white-space:nowrap}
+.variants .vor{color:var(--muted); margin:0 4px}
+.variants .vw{margin-top:6px; color:#cfe9e2; font-size:14px}
+.variants .vc{margin-top:6px; font-weight:600}
+.variants.ok{background:none; border:none; padding:4px 0 0; margin-top:4px; color:var(--muted); font-size:14px}
+.variants.ok b{color:#cfe9e2; font-weight:600}

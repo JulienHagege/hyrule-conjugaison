@@ -376,6 +376,15 @@ label.btn{cursor:pointer}
 .mock-input .caret{display:inline-block; width:2px; height:1em; background:var(--zonai); vertical-align:-2px; margin-left:2px; animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 .mock-hearts{justify-content:center; margin-top:10px}
+/* Plusieurs orthographes justes */
+.variants{margin-top:10px; padding:10px 12px; border-radius:12px; background:rgba(93,227,192,.09); border:1px solid rgba(93,227,192,.45); color:#e8fff8; font-size:15px; line-height:1.45}
+.variants .vt{font-weight:700; color:#5de3c0; margin-bottom:4px}
+.variants .vl b{color:#fff; white-space:nowrap}
+.variants .vor{color:var(--muted); margin:0 4px}
+.variants .vw{margin-top:6px; color:#cfe9e2; font-size:14px}
+.variants .vc{margin-top:6px; font-weight:600}
+.variants.ok{background:none; border:none; padding:4px 0 0; margin-top:4px; color:var(--muted); font-size:14px}
+.variants.ok b{color:#cfe9e2; font-weight:600}
 
 /* ---------- Les Profondeurs : accord du participe ---------- */
 .region.depths{grid-column:1/-1; display:grid; grid-template-columns:auto minmax(0,1fr); column-gap:14px; row-gap:6px; align-items:center; height:auto; border-color:rgba(106,208,255,.45); background-position:center 60%}
@@ -1001,7 +1010,7 @@ function pieces(V){
   // les verbes en é + consonne + er gardent aussi le radical de l'infinitif (je préférerai, orthographe traditionnelle, puis je préfèrerai).
   if (P.fut) out.fut = P.fut.split('/');
   else if (inf.endsWith('er')){ const je = (V.imp ? pr[2] : pr[0]).map(f => f+'r'); const eacc = /é[^aeiouéè]+er$/.test(inf) && pr[0][0].includes('è'); out.fut = uniq(eacc ? [inf, ...je] : je); }
-  else if (inf.endsWith('re')) out.fut = [inf.slice(0,-1)];
+  else if (inf.endsWith('re')) out.fut = uniq([inf.slice(0,-1), inf.slice(0,-1).replace('aîtr','aitr')]); // connaîtrai ou connaitrai (orthographe de 1990)
   else out.fut = [inf];
   // Passé simple
   if (P.psF) out.psF = P.psF.split(',').map(splitAlt);
@@ -1118,6 +1127,36 @@ function tenseNote(V, tid){
     case 'imperatif': return `Impératif : les formes tu, nous, vous du présent, sans sujet.${V.g===1 || /^(ouvr|offr|couvr|découvr|souffr|cueill|accueill)/.test(pc.inf) ? " Pas de s à la 2e personne : chante, ouvre." : ''}${V.refl ? " Pronominal : le pronom passe après avec un trait d'union (lève-toi, levons-nous)." : ''}${P.imper ? " Formes irrégulières, à retenir par cœur." : ''}`;
   }
   return V.n;
+}
+
+/* Plusieurs orthographes justes (Bescherelle) : pourquoi, et lesquelles.
+   Affiché quand l'enfant se trompe (toutes les formes, puis « écris-en une seule ») et, en plus discret, quand il réussit. */
+function variantWhy(V, tid, alts){
+  const v = V.v;
+  if (alts.length===2 && /î/.test(alts[0]) && alts[0].replace(/î/g,'i')===alts[1])
+    return "Depuis la réforme de l'orthographe de 1990, l'accent circonflexe sur le i n'est plus obligatoire. Les deux s'écrivent, le Bescherelle donne les deux.";
+  if (TENSE_BY[tid].cmp && pieces(V).aux==='ae') return `« ${v} » se conjugue avec être ou avec avoir aux temps composés. Les deux sont justes.`;
+  if (v==="s'asseoir") return "S'asseoir a deux conjugaisons, toutes les deux justes : l'une avec « ie » ou « ey » (je m'assieds, je m'assiérai, nous nous asseyons), l'autre avec « oi » ou « oy » (je m'assois, je m'assoirai, nous nous assoyons).";
+  if (/ayer$/.test(v)) return "Verbe en -ayer : devant un e muet, on garde le y ou on le change en i, au choix (je paie ou je paye, je paierai ou je payerai). Avec nous et vous, toujours y.";
+  if (/e[lt]er$/.test(v)) return "Depuis la réforme de 1990, on peut mettre un accent grave au lieu de doubler la consonne (il épèle ou il épelle). Seuls appeler, jeter et leur famille gardent toujours la double consonne.";
+  if (/é[^aeiouéè]+er$/.test(v)) return "Au futur et au conditionnel, on peut garder le é de l'infinitif (orthographe traditionnelle) ou écrire è, comme on l'entend (réforme de 1990). Les deux sont justes.";
+  if (v==='pouvoir') return "« Je puis » existe aussi, dans un style très soutenu. « Je peux » est la forme de tous les jours.";
+  if (v==='vouloir') return "À l'impératif, « veuille, veuillez » est la forme polie qu'on utilise presque toujours ; « veux, voulez » existe aussi.";
+  return "Ce verbe a plusieurs orthographes justes à cette personne.";
+}
+const NUM_FR = ['', 'une', 'Deux', 'Trois', 'Quatre'];
+function variantList(q){ return q.a.map(f => `<b>${esc(subjectText(q, f) + f)}</b>`).join(' <span class="vor">ou</span> '); }
+// Après une faute : toutes les formes justes, la raison, et la consigne.
+function variantsHtml(q){
+  if (q.cod || !q.a || q.a.length<2) return '';
+  const V = VERBS[q.m];
+  return `<div class="variants"><div class="vt">✦ ${NUM_FR[q.a.length]||q.a.length} orthographes justes</div><div class="vl">${variantList(q)}</div><div class="vw">${esc(variantWhy(V, TENSE, q.a))}</div><div class="vc">Écris-en une seule, celle que tu préfères.</div></div>`;
+}
+// Après une bonne réponse : signaler l'autre forme, sans insister.
+function variantsOkHtml(q, a){
+  if (q.cod || !q.a || q.a.length<2) return '';
+  const others = q.a.filter(f => f!==a); if (!others.length) return '';
+  return `<div class="variants ok"><div class="vl">On peut aussi écrire : ${others.map(f => `<b>${esc(subjectText(q, f) + f)}</b>`).join(' ou ')}</div></div>`;
 }
 const REFL = ['me','te','se','nous','vous','se'];
 const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
@@ -1692,7 +1731,7 @@ function submitAnswer(e){
     const fl = document.createElement('span'); fl.className='float'; fl.textContent='+'+gain; $('#g-rupees').parentElement.appendChild(fl); setTimeout(()=>fl.remove(),1000);
     const msgs = ['Bravo !','Coup critique !','Parfait !','Un vrai héros !','Hyrule est fière de toi !','Excellent !','Yahaha !'];
     $('#q-blank').textContent = a;
-    $('#fb').innerHTML = `<div class="fb ok"><div class="big">${msgs[Math.floor(Math.random()*msgs.length)]}</div><div class="right">${sentenceHtml(q,a)}</div><div class="actions"><button class="btn teal" id="btn-next">Continuer →</button></div>${q.cod ? codWhyHtml(q) : conjTable(V, q.p)}</div>`;
+    $('#fb').innerHTML = `<div class="fb ok"><div class="big">${msgs[Math.floor(Math.random()*msgs.length)]}</div><div class="right">${sentenceHtml(q,a)}</div>${variantsOkHtml(q,a)}<div class="actions"><button class="btn teal" id="btn-next">Continuer →</button></div>${q.cod ? codWhyHtml(q) : conjTable(V, q.p)}</div>`;
     $('#form-answer').hidden = true; $('#accents').hidden = true;
     $('#btn-next').addEventListener('click', next); $('#btn-next').focus();
     save(); renderGame();
@@ -1703,8 +1742,8 @@ function submitAnswer(e){
     const correct = alts[0];
     if (almost){
       S.rupees += 5; run.rupees += 5; SFX.mid();
-      $('#fb').innerHTML = `<div class="fb mid"><div class="big">${almostMsg}</div><div class="right">${sentenceHtml(q,correct)}${alts.length>1?` <span style="color:var(--muted);font-size:15px">(ou ${esc(alts.slice(1).join(', '))})</span>`:''}</div>
-        <div class="sage"><b>✦ Le Sage :</b><span>${esc(q.cod ? codNote(q) : tenseNote(V, TENSE))}</span></div>${retypeBlock(correct)}</div>`;
+      $('#fb').innerHTML = `<div class="fb mid"><div class="big">${almostMsg}</div><div class="right">${sentenceHtml(q,correct)}</div>${variantsHtml(q)}
+        <div class="sage"><b>✦ Le Sage :</b><span>${esc(q.cod ? codNote(q) : tenseNote(V, TENSE))}</span></div>${retypeBlock(correct, alts)}</div>`;
     } else {
       run.hearts--;
       const hs = $('#g-hearts').children[run.hearts]; if (hs) hs.classList.add('lose');
@@ -1712,8 +1751,8 @@ function submitAnswer(e){
       SFX.ko();
       const card = $('#qcard'); card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
       const msgs = run.mode==='boss' ? ['Ganondorf frappe !','Le miasme te brûle !','Le Roi Démon ricane…','Un éclair de malice te touche !'] : ['Aïe, un Bokoblin t\'a touché !','Raté ! Un Lézalfos en profite.','Pas cette fois, héros.','Attention, le Fléau rôde !'];
-      $('#fb').innerHTML = `<div class="fb ko"><div class="big">${msgs[Math.floor(Math.random()*msgs.length)]}</div><div class="right">${sentenceHtml(q,correct)}${alts.length>1?` <span style="color:var(--muted);font-size:15px">(ou ${esc(alts.slice(1).join(', '))})</span>`:''}</div>
-        <div class="sage"><b>✦ Le Sage :</b><span>${esc(q.cod ? codNote(q) : tenseNote(V, TENSE))}</span></div>${retypeBlock(correct)}${q.cod ? '' : conjTable(V, q.p)}${run.rewind?'<div class="actions"><button class="btn ghost" id="btn-rewind">⏪ Rembobinage : récupérer le cœur</button></div>':''}</div>`;
+      $('#fb').innerHTML = `<div class="fb ko"><div class="big">${msgs[Math.floor(Math.random()*msgs.length)]}</div><div class="right">${sentenceHtml(q,correct)}</div>${variantsHtml(q)}
+        <div class="sage"><b>✦ Le Sage :</b><span>${esc(q.cod ? codNote(q) : tenseNote(V, TENSE))}</span></div>${retypeBlock(correct, alts)}${q.cod ? '' : conjTable(V, q.p)}${run.rewind?'<div class="actions"><button class="btn ghost" id="btn-rewind">⏪ Rembobinage : récupérer le cœur</button></div>':''}</div>`;
       const rb = $('#btn-rewind'); if (rb) rb.addEventListener('click', () => { run.rewind=0; run.hearts++; rb.remove(); SFX.heart(); toast('⏪ Le temps remonte : cœur récupéré !'); renderGame(); });
     }
     $('#q-blank').innerHTML = '<span style="color:var(--danger);text-decoration:line-through">'+esc(raw.trim())+'</span>';
@@ -1724,13 +1763,15 @@ function submitAnswer(e){
     if (run.hearts<=0){ $('#inp-retype').disabled = true; $('#btn-retype').textContent = 'Voir le résultat'; $('#btn-retype').onclick = endRun; $('#inp-retype').placeholder='Plus de cœurs…'; }
   }
 }
-function retypeBlock(correct){
-  return `<form class="retype" id="form-retype"><label for="inp-retype">Recopie la bonne réponse pour continuer :</label><div class="answer"><input id="inp-retype" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Recopie la bonne réponse"><button class="btn" type="submit" id="btn-retype">OK</button></div><div class="accents" id="accents2"></div></form>`;
+function retypeBlock(correct, alts){
+  const lbl = alts && alts.length>1 ? 'Écris une des orthographes justes pour continuer :' : 'Recopie la bonne réponse pour continuer :';
+  return `<form class="retype" id="form-retype"><label for="inp-retype">${lbl}</label><div class="answer"><input id="inp-retype" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Recopie la bonne réponse"><button class="btn" type="submit" id="btn-retype">OK</button></div><div class="accents" id="accents2"></div></form>`;
 }
 function retypeCheck(){
   const q = run.qs[run.i];
   const ri = $('#inp-retype'); const a = norm(ri.value);
   if (q.a.includes(a)){ SFX.ok(); next(); }
+  else if (q.a.length>1 && q.a.filter(f => a.includes(f)).length>1){ toast('✦ Une seule orthographe suffit : choisis-en une.'); ri.select(); }
   else { const card = $('#qcard'); card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); ri.select(); }
 }
 function conjTable(V, p){
@@ -1993,7 +2034,7 @@ function moonAnswerBody(c){
   } else {
     moon.errors++; moon.lost++; run.hearts--;
     if (!moon.test){ it.w++; it.s=0; S.tot.w++; run.errors.push({v:q.v, m:q.m, p:q.p, t:q.t, s:q.s, g:q.g, n:q.n, a:q.a, c:q.c, cod:q.cod, given: c || '(trop lent)', moon:true}); }
-    msg.className = 'moon-msg'; msg.textContent = (c ? 'Raté ! ' : '⏳ Trop lent ! ') + 'C\'était « '+correct+' ». Tu perds un cœur.';
+    msg.className = 'moon-msg'; msg.textContent = (c ? 'Raté ! ' : '⏳ Trop lent ! ') + 'C\'était « '+alts.join(' » ou « ')+' ». Tu perds un cœur.';
     SFX.ko(); const f = document.createElement('div'); f.className='hitflash'; document.body.appendChild(f); setTimeout(()=>f.remove(), 600);
   }
   if (!moon.test) save();

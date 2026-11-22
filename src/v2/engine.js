@@ -135,7 +135,7 @@ function pieces(V){
   // les verbes en é + consonne + er gardent aussi le radical de l'infinitif (je préférerai, orthographe traditionnelle, puis je préfèrerai).
   if (P.fut) out.fut = P.fut.split('/');
   else if (inf.endsWith('er')){ const je = (V.imp ? pr[2] : pr[0]).map(f => f+'r'); const eacc = /é[^aeiouéè]+er$/.test(inf) && pr[0][0].includes('è'); out.fut = uniq(eacc ? [inf, ...je] : je); }
-  else if (inf.endsWith('re')) out.fut = [inf.slice(0,-1)];
+  else if (inf.endsWith('re')) out.fut = uniq([inf.slice(0,-1), inf.slice(0,-1).replace('aîtr','aitr')]); // connaîtrai ou connaitrai (orthographe de 1990)
   else out.fut = [inf];
   // Passé simple
   if (P.psF) out.psF = P.psF.split(',').map(splitAlt);
@@ -253,3 +253,34 @@ function tenseNote(V, tid){
   }
   return V.n;
 }
+
+/* Plusieurs orthographes justes (Bescherelle) : pourquoi, et lesquelles.
+   Affiché quand l'enfant se trompe (toutes les formes, puis « écris-en une seule ») et, en plus discret, quand il réussit. */
+function variantWhy(V, tid, alts){
+  const v = V.v;
+  if (alts.length===2 && /î/.test(alts[0]) && alts[0].replace(/î/g,'i')===alts[1])
+    return "Depuis la réforme de l'orthographe de 1990, l'accent circonflexe sur le i n'est plus obligatoire. Les deux s'écrivent, le Bescherelle donne les deux.";
+  if (TENSE_BY[tid].cmp && pieces(V).aux==='ae') return `« ${v} » se conjugue avec être ou avec avoir aux temps composés. Les deux sont justes.`;
+  if (v==="s'asseoir") return "S'asseoir a deux conjugaisons, toutes les deux justes : l'une avec « ie » ou « ey » (je m'assieds, je m'assiérai, nous nous asseyons), l'autre avec « oi » ou « oy » (je m'assois, je m'assoirai, nous nous assoyons).";
+  if (/ayer$/.test(v)) return "Verbe en -ayer : devant un e muet, on garde le y ou on le change en i, au choix (je paie ou je paye, je paierai ou je payerai). Avec nous et vous, toujours y.";
+  if (/e[lt]er$/.test(v)) return "Depuis la réforme de 1990, on peut mettre un accent grave au lieu de doubler la consonne (il épèle ou il épelle). Seuls appeler, jeter et leur famille gardent toujours la double consonne.";
+  if (/é[^aeiouéè]+er$/.test(v)) return "Au futur et au conditionnel, on peut garder le é de l'infinitif (orthographe traditionnelle) ou écrire è, comme on l'entend (réforme de 1990). Les deux sont justes.";
+  if (v==='pouvoir') return "« Je puis » existe aussi, dans un style très soutenu. « Je peux » est la forme de tous les jours.";
+  if (v==='vouloir') return "À l'impératif, « veuille, veuillez » est la forme polie qu'on utilise presque toujours ; « veux, voulez » existe aussi.";
+  return "Ce verbe a plusieurs orthographes justes à cette personne.";
+}
+const NUM_FR = ['', 'une', 'Deux', 'Trois', 'Quatre'];
+function variantList(q){ return q.a.map(f => `<b>${esc(subjectText(q, f) + f)}</b>`).join(' <span class="vor">ou</span> '); }
+// Après une faute : toutes les formes justes, la raison, et la consigne.
+function variantsHtml(q){
+  if (q.cod || !q.a || q.a.length<2) return '';
+  const V = VERBS[q.m];
+  return `<div class="variants"><div class="vt">✦ ${NUM_FR[q.a.length]||q.a.length} orthographes justes</div><div class="vl">${variantList(q)}</div><div class="vw">${esc(variantWhy(V, TENSE, q.a))}</div><div class="vc">Écris-en une seule, celle que tu préfères.</div></div>`;
+}
+// Après une bonne réponse : signaler l'autre forme, sans insister.
+function variantsOkHtml(q, a){
+  if (q.cod || !q.a || q.a.length<2) return '';
+  const others = q.a.filter(f => f!==a); if (!others.length) return '';
+  return `<div class="variants ok"><div class="vl">On peut aussi écrire : ${others.map(f => `<b>${esc(subjectText(q, f) + f)}</b>`).join(' ou ')}</div></div>`;
+}
+
